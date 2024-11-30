@@ -9,6 +9,10 @@ describe("DerpyDragons Admin Tests", async function () {
   async function adminFixture() {
     const [owner, user1, user2] = await ethers.getSigners();
 
+    const MockEntropy = await ethers.getContractFactory("MockEntropy");
+    const entropy = await MockEntropy.deploy(await owner.getAddress());
+    await entropy.waitForDeployment();
+
     const Dragons = await ethers.getContractFactory("Dragons");
     const dragons = await Dragons.deploy();
     await dragons.waitForDeployment();
@@ -19,7 +23,13 @@ describe("DerpyDragons Admin Tests", async function () {
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
     const derpyDragonsUntyped = await upgrades.deployProxy(
       DerpyDragons,
-      ["Derpy Dragons", "DD", 1000, 10000, await dragons.getAddress()],
+      [
+        "Derpy Dragons",
+        "DD",
+        await entropy.getAddress(),
+        1000,
+        await dragons.getAddress(),
+      ],
       { initializer: "initialize" }
     );
     await derpyDragonsUntyped.waitForDeployment();
@@ -117,29 +127,6 @@ describe("DerpyDragons Admin Tests", async function () {
 
       await expect(
         derpyDragons.connect(user1).setStakingMode(true)
-      ).to.be.revertedWithCustomError(
-        derpyDragons,
-        "OwnableUnauthorizedAccount"
-      );
-    });
-
-    it("should allow the owner to set points required", async function () {
-      const { owner, derpyDragons } = await loadFixture(adminFixture);
-
-      // Set points required
-      await expect(derpyDragons.connect(owner).setPointsRequired(5000))
-        .to.emit(derpyDragons, "PointsRequiredUpdated") // Add an event for this in your contract if not present
-        .withArgs(5000);
-
-      // Verify the updated value
-      expect(await derpyDragons.pointsRequired()).to.equal(5000);
-    });
-
-    it("should revert if a non-owner tries to set points required", async function () {
-      const { user1, derpyDragons } = await loadFixture(adminFixture);
-
-      await expect(
-        derpyDragons.connect(user1).setPointsRequired(5000)
       ).to.be.revertedWithCustomError(
         derpyDragons,
         "OwnableUnauthorizedAccount"

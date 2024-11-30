@@ -10,8 +10,9 @@ describe("DerpyDragons Tests", async function () {
   async function cbcFixture() {
     const [owner, user1, user2, user3] = await ethers.getSigners();
 
-    // console.log(await fish.getAddress());
-    // console.log("Deploying Fishies Contract...");
+    const MockEntropy = await ethers.getContractFactory("MockEntropy");
+    const entropy = await MockEntropy.deploy(await owner.getAddress());
+    await entropy.waitForDeployment();
 
     const Dragons = await ethers.getContractFactory("Dragons");
     const dragons = await Dragons.deploy();
@@ -24,7 +25,13 @@ describe("DerpyDragons Tests", async function () {
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
     const derpyDragonsUntyped = await upgrades.deployProxy(
       DerpyDragons,
-      ["Derpy Dragons", "DD", 40, 10000, await dragons.getAddress()],
+      [
+        "Derpy Dragons",
+        "DD",
+        await entropy.getAddress(),
+        40,
+        await dragons.getAddress(),
+      ],
       { initializer: "initialize" }
     );
     await derpyDragonsUntyped.waitForDeployment();

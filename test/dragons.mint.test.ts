@@ -2,9 +2,9 @@ import { ethers, upgrades } from "hardhat";
 import "@nomicfoundation/hardhat-toolbox";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { DerpyDragons } from "../typechain-types";
+import { MockEntropy, DerpyDragons } from "../typechain-types";
 
-describe("DerpyDragons Minting Tests", async function () {
+describe("DerpyDragons Minting with Entropy", async function () {
   async function mintingFixture() {
     const [owner, user1, user2] = await ethers.getSigners();
 
@@ -15,15 +15,28 @@ describe("DerpyDragons Minting Tests", async function () {
     await dragons.mint(await user1.getAddress(), 10);
     await dragons.mint(await user2.getAddress(), 10);
 
+    const MockEntropy = await ethers.getContractFactory("MockEntropy");
+    const entropy = await MockEntropy.deploy(await owner.getAddress());
+    await entropy.waitForDeployment();
+
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
     const derpyDragonsUntyped = await upgrades.deployProxy(
       DerpyDragons,
-      ["Derpy Dragons", "DD", 40, 10000, await dragons.getAddress()],
+      [
+        "Derpy Dragons",
+        "DD",
+        await entropy.getAddress(),
+        40,
+        await dragons.getAddress(),
+      ],
       { initializer: "initialize" }
     );
     await derpyDragonsUntyped.waitForDeployment();
 
     const derpyDragons = derpyDragonsUntyped as unknown as DerpyDragons;
+
+    // Set the DerpyDragons contract as the caller for the entropy contract
+    await entropy.setCallerContract(await derpyDragons.getAddress());
 
     return {
       owner,
@@ -31,16 +44,17 @@ describe("DerpyDragons Minting Tests", async function () {
       user2,
       derpyDragons,
       dragons,
+      entropy,
     };
   }
 
-  describe("Minting Tokens", async function () {
-    it("should allow minting if the user has enough rewards", async function () {
-      const { user1, derpyDragons, dragons } = await loadFixture(
+  describe("Minting with Randomness", async function () {
+    it("should correctly handle a successful mint with randomness callback", async function () {
+      const { user1, derpyDragons, dragons, entropy } = await loadFixture(
         mintingFixture
       );
 
-      // Open staking mode and stake some tokens
+      // Enable staking mode and stake tokens
       await derpyDragons.setStakingMode(true);
       const tokenIds = [1, 2, 3, 4, 5];
       await dragons
@@ -52,174 +66,52 @@ describe("DerpyDragons Minting Tests", async function () {
       await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
       await ethers.provider.send("evm_mine", []);
 
-      // Mint a new token
-      await expect(derpyDragons.connect(user1).mintToken())
-        .to.emit(derpyDragons, "TokenMinted")
-        .withArgs(await user1.getAddress(), 1);
+      // Mint token request
+      const tx = await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+      const receipt = await tx.wait();
 
-      // Verify new token exists and is owned by the user
+      // console.log("Minted token receipt:", receipt);
+
+      // Set up a filter for the MintRequested event and query it
+      const filter = derpyDragons.filters.MintRequested();
+
+      // console.log("Filter:", filter);
+
+      // console.log("Block hash:", receipt.hash);
+
+      const events = await derpyDragons.queryFilter(filter);
+
+      // Verify the MintRequested event was emitted with the correct values
+      const event = events[0];
+
+      const sequenceNumber = event.args![1];
+
+      expect(event.args!.user).to.equal(await user1.getAddress());
+      expect(sequenceNumber).to.be.a("bigInt");
+
+      // Manually trigger the entropy callback
+      await entropy.fireCallbackManually(sequenceNumber);
+
+      // Verify that the token was minted and assigned to the user
       expect(await derpyDragons.ownerOf(1)).to.equal(await user1.getAddress());
-
-      // Verify remaining rewards
-      const owedRewards = await derpyDragons.owedRewards(
-        await user1.getAddress()
-      );
-      const expectedRewards = 10 * 960 * 5 - 10000; // 10 days * 960 points/day * 5 tokens - 10000 pointsRequired
-      expect(owedRewards).to.equal(expectedRewards);
-    });
-
-    it("should revert if the user does not have enough rewards", async function () {
-      const { user1, derpyDragons, dragons } = await loadFixture(
-        mintingFixture
-      );
-
-      // Open staking mode and stake some tokens
-      await derpyDragons.setStakingMode(true);
-      const tokenIds = [1, 2];
-      await dragons
-        .connect(user1)
-        .setApprovalForAll(await derpyDragons.getAddress(), true);
-      await derpyDragons.connect(user1).stake(tokenIds);
-
-      // Attempt to mint without sufficient rewards
-      await expect(
-        derpyDragons.connect(user1).mintToken()
-      ).to.be.revertedWithCustomError(derpyDragons, "InsufficientBalance");
-    });
-
-    it("should ensure staked tokens remain staked after minting", async function () {
-      const { user1, derpyDragons, dragons } = await loadFixture(
-        mintingFixture
-      );
-
-      // Open staking mode and stake some tokens
-      await derpyDragons.setStakingMode(true);
-      const tokenIds = [1, 2, 3];
-      await dragons
-        .connect(user1)
-        .setApprovalForAll(await derpyDragons.getAddress(), true);
-      await derpyDragons.connect(user1).stake(tokenIds);
-
-      // Advance time to accumulate rewards
-      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
-      await ethers.provider.send("evm_mine", []);
-
-      // Mint a token
-      await derpyDragons.connect(user1).mintToken();
-
-      // Verify staked tokens are still staked
-      for (const tokenId of tokenIds) {
-        const stakedProps = await derpyDragons.stakedTokenProps(tokenId);
-        expect(stakedProps.owner).to.equal(await user1.getAddress());
-        expect(stakedProps.checkInTimestamp).to.be.greaterThan(0);
-      }
-    });
-
-    it("should correctly update owedRewards after unstaking", async function () {
-      const { user1, derpyDragons, dragons } = await loadFixture(
-        mintingFixture
-      );
-
-      // Open staking mode and stake some tokens
-      await derpyDragons.setStakingMode(true);
-      const tokenIds = [1, 2, 3, 4, 5];
-      await dragons
-        .connect(user1)
-        .setApprovalForAll(await derpyDragons.getAddress(), true);
-      await derpyDragons.connect(user1).stake(tokenIds);
-
-      // Advance time to accumulate rewards
-      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
-      await ethers.provider.send("evm_mine", []);
-
-      // Mint a token
-      await derpyDragons.connect(user1).mintToken();
-
-      // Check owedRewards after minting
-      const owedAfterMint = await derpyDragons.owedRewards(
-        await user1.getAddress()
-      );
-      const expectedRewardsAfterMint = 10 * 960 * 5 - 10000; // 10 days * 960 points/day * 5 tokens - 10000 pointsRequired
-      expect(owedAfterMint).to.equal(expectedRewardsAfterMint);
-
-      // Advance time to accumulate additional rewards
-      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 5]); // 5 days
-      await ethers.provider.send("evm_mine", []);
-
-      // Unstake tokens
-      await derpyDragons.connect(user1).unstake(tokenIds);
-
-      // Calculate new expected owed rewards
-      const additionalRewards = 5n * 960n * 5n; // 5 days * 960 points/day * 5 tokens
-      const expectedRewardsAfterUnstake = owedAfterMint + additionalRewards;
-
-      // Verify owedRewards after unstaking
-      const owedAfterUnstake = await derpyDragons.owedRewards(
-        await user1.getAddress()
-      );
-      expect(owedAfterUnstake).to.equal(expectedRewardsAfterUnstake);
-    });
-
-    it("should increment mintedDragonCount after each mint", async function () {
-      const { user1, derpyDragons, dragons } = await loadFixture(
-        mintingFixture
-      );
-
-      // Open staking mode and stake some tokens
-      await derpyDragons.setStakingMode(true);
-      const tokenIds = [1, 2, 3, 4, 5];
-      await dragons
-        .connect(user1)
-        .setApprovalForAll(await derpyDragons.getAddress(), true);
-      await derpyDragons.connect(user1).stake(tokenIds);
-
-      // Advance time to accumulate rewards for 5 days
-      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 5]); // 5 days
-      await ethers.provider.send("evm_mine", []);
-
-      // Calculate expected rewards
-      const hoursStaked = 120n; // 5 days * 24 hours
-      const rewardPerHour = 40n;
-      const tokensStaked = 5n;
-      const totalRewards = hoursStaked * rewardPerHour * tokensStaked;
-
-      console.log("Total Rewards after 5 days:", totalRewards);
-
-      // Mint first token
-      await derpyDragons.connect(user1).mintToken();
       expect(await derpyDragons.mintedDragonCount()).to.equal(1);
 
-      // Remaining rewards after first mint
-      const pointsRequired = 10000n;
-      const remainingRewardsAfterFirstMint = totalRewards - pointsRequired;
-      expect(
-        await derpyDragons.pendingRewards(await user1.getAddress())
-      ).to.equal(remainingRewardsAfterFirstMint);
+      // Set up a filter for the TokenMinted event and query it
+      const mintedFilter = derpyDragons.filters.TokenMinted();
+      const mintedEvents = await derpyDragons.queryFilter(mintedFilter);
 
-      // Mint second token
-      await derpyDragons.connect(user1).mintToken();
-      expect(await derpyDragons.mintedDragonCount()).to.equal(2);
+      // Verify the TokenMinted event
+      const mintedEvent = mintedEvents[0];
+      expect(mintedEvent.args!.user).to.equal(await user1.getAddress());
+      expect(mintedEvent.args!.tokenId).to.equal(1);
 
-      // Remaining rewards after second mint
-      const remainingRewardsAfterSecondMint =
-        remainingRewardsAfterFirstMint - pointsRequired;
-      expect(
-        await derpyDragons.pendingRewards(await user1.getAddress())
-      ).to.equal(remainingRewardsAfterSecondMint);
+      console.log("Minted token event:", await derpyDragons.mintRequests(1));
 
-      // Advance time to accumulate enough for a third mint
-      const additionalHours = 30 * 60 * 60; // 30 hours
-      await ethers.provider.send("evm_increaseTime", [additionalHours]);
-      await ethers.provider.send("evm_mine", []);
-
-      // Mint third token
-      await derpyDragons.connect(user1).mintToken();
-      expect(await derpyDragons.mintedDragonCount()).to.equal(3);
-
-      // Verify remaining rewards after third mint are zero
-      expect(
-        await derpyDragons.pendingRewards(await user1.getAddress())
-      ).to.equal(0n);
+      expect(await derpyDragons.balanceOf(await user1.getAddress())).to.equal(
+        1
+      );
     });
   });
 });
