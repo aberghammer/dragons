@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 
-contract DerpyDragons is
+contract DerpyDragonsV2 is
     Initializable,
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -61,7 +61,7 @@ contract DerpyDragons is
     function initialize(
         string calldata contractName_,
         string calldata contractSymbol_,
-        uint256 pointsPerHourPerToken_,
+        uint256 pointsPerDayPerToken_,
         uint256 pointsRequired_,
         address dragonsAddress
     ) public initializer {
@@ -72,12 +72,9 @@ contract DerpyDragons is
         __ReentrancyGuard_init();
         __ERC721Holder_init();
         dragons = IERC721(dragonsAddress);
-
-        // Verwenden der sichereren Logik
-        pointsPerHourPerToken = pointsPerHourPerToken_;
-        pointsPerDayPerToken = pointsPerHourPerToken_ * 24;
-
         pointsRequired = pointsRequired_;
+        pointsPerDayPerToken = pointsPerDayPerToken_;
+        pointsPerHourPerToken = pointsPerDayPerToken_ / 24;
         stakedTokenIds[address(0)].push();
     }
 
@@ -320,6 +317,6 @@ contract DerpyDragons is
     ) internal override onlyOwner {}
 
     function version() public pure returns (string memory) {
-        return "1.0";
+        return "2.0";
     }
 }
