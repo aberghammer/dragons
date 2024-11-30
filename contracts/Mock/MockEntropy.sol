@@ -57,11 +57,19 @@ contract MockEntropy is IEntropy {
         return assignedSequenceNumber;
     }
 
-    function fireCallbackManually(uint64 sequenceNumber) public {
-        // Simulate a random number based on user input
-        bytes32 simulatedRandomNumber = keccak256(
-            abi.encodePacked("userRandomNumber")
-        );
+    function fireCallbackManually(
+        uint64 sequenceNumber,
+        uint256 customRandomNumber
+    ) public {
+        // Use the custom random number if provided, otherwise simulate one
+        bytes32 simulatedRandomNumber;
+        if (customRandomNumber > 0) {
+            simulatedRandomNumber = bytes32(customRandomNumber);
+        } else {
+            simulatedRandomNumber = keccak256(
+                abi.encodePacked("userRandomNumber")
+            );
+        }
 
         // Directly call the callback function on the contract that needs the random number
         IEntropyConsumer(callerContract)._entropyCallback(

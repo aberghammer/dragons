@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
-
+import "@openzeppelin/contracts/utils/Strings.sol";
 import {IEntropyConsumer} from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 
@@ -61,6 +61,7 @@ contract DerpyDragonsV2 is
         uint256 tokenId;
         uint256 randomNumber;
         uint256 timestamp;
+        string uri;
         uint8 rollType;
         bool completed;
         bool cancelled;
@@ -71,6 +72,7 @@ contract DerpyDragonsV2 is
         uint256[6] probabilities; // Wahrscheinlichkeiten für jede Stufe
         uint256 minted; // Bereits gemintete Tokens dieser Rarität
         uint256 maxSupply; // Maximale Anzahl an Tokens dieser Rarität
+        string tokenUri; // URI für die Token-Metadaten
     }
 
     bool public stakingOpen;
@@ -92,6 +94,7 @@ contract DerpyDragonsV2 is
     mapping(address => uint256) public owedRewards;
     mapping(uint64 => uint256) public requestIdToMintId;
     mapping(uint64 => MintRequest) public mintRequests;
+    mapping(uint256 => string) public tokenURIs; // Mapping von Token-ID zu vollständiger URI
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -133,37 +136,43 @@ contract DerpyDragonsV2 is
             price: 1000,
             probabilities: [uint256(100), 0, 0, 0, 0, 0], // 100% Common
             minted: 0,
-            maxSupply: 1000
+            maxSupply: 100,
+            tokenUri: "ar://common-folder/"
         });
         rarities[2] = Rarity({
             price: 2000,
             probabilities: [uint256(60), 40, 0, 0, 0, 0], // 60% Common, 40% Uncommon
             minted: 0,
-            maxSupply: 800
+            maxSupply: 80,
+            tokenUri: "ar://uncommon-folder/"
         });
         rarities[3] = Rarity({
             price: 3000,
             probabilities: [uint256(50), 40, 10, 0, 0, 0], // 50% Common, 40% Uncommon, 10% Rare
             minted: 0,
-            maxSupply: 500
+            maxSupply: 50,
+            tokenUri: "ar://rare-folder/"
         });
         rarities[4] = Rarity({
             price: 4000,
             probabilities: [uint256(45), 35, 15, 5, 0, 0], // 45% Common, 35% Uncommon, 15% Rare, 5% Epic
             minted: 0,
-            maxSupply: 200
+            maxSupply: 20,
+            tokenUri: "ar://epic-folder/"
         });
         rarities[5] = Rarity({
             price: 5000,
             probabilities: [uint256(40), 30, 15, 10, 5, 0], // 40% Common, 30% Uncommon, 15% Rare, 10% Epic, 5% Legendary
             minted: 0,
-            maxSupply: 100
+            maxSupply: 10,
+            tokenUri: "ar://legendary-folder/"
         });
         rarities[6] = Rarity({
             price: 6000,
             probabilities: [uint256(35), 25, 15, 15, 5, 5], // 35% Common, 25% Uncommon, 15% Rare, 15% Epic, 5% Legendary, 5% Mythic
             minted: 0,
-            maxSupply: 50
+            maxSupply: 5,
+            tokenUri: "ar://mythic-folder/"
         });
     }
 
@@ -250,7 +259,6 @@ contract DerpyDragonsV2 is
         uint256 randomValue = uint256(randomNumber) % 100; // Zufallswert zwischen 0 und 99
         uint8 rollType = request.rollType;
 
-        // Überprüfen, ob der Roll-Typ valide ist
         if (rollType < 1 || rollType > 6) revert InvalidRollType();
 
         uint8 rarityIndex = 0;
@@ -259,55 +267,68 @@ contract DerpyDragonsV2 is
         // Wahrscheinlichkeit für Rarität bestimmen
         for (uint8 i = 0; i < 6; i++) {
             cumulativeProbability += rarities[rollType].probabilities[i];
-
             if (randomValue < cumulativeProbability) {
                 rarityIndex = i + 1; // Raritäten starten bei 1
                 break;
             }
         }
 
-        // Überprüfung und Fallback-Logik für verfügbare Raritäten
-        Rarity storage selectedRarity = rarities[rarityIndex];
+        // Temporäre Variable für endgültige Rarität
+        uint8 finalRarityIndex = rarityIndex;
 
         // Aufsteigend prüfen (nur wenn Wahrscheinlichkeit > 0)
         while (
-            rarityIndex <= 6 &&
-            (selectedRarity.minted >= selectedRarity.maxSupply ||
-                rarities[rarityIndex].probabilities[rarityIndex - 1] == 0)
+            finalRarityIndex <= 6 &&
+            (rarities[finalRarityIndex].minted >=
+                rarities[finalRarityIndex].maxSupply ||
+                rarities[rollType].probabilities[finalRarityIndex - 1] == 0)
         ) {
-            rarityIndex += 1;
-            if (rarityIndex <= 6) {
-                selectedRarity = rarities[rarityIndex];
-            }
+            finalRarityIndex += 1;
         }
 
         // Absteigend prüfen, wenn keine höhere Rarität verfügbar
         if (
-            rarityIndex > 6 || selectedRarity.minted >= selectedRarity.maxSupply
+            finalRarityIndex > 6 ||
+            rarities[finalRarityIndex].minted >=
+            rarities[finalRarityIndex].maxSupply
         ) {
-            rarityIndex = request.rollType;
+            finalRarityIndex = rarityIndex;
             while (
-                rarityIndex > 0 &&
-                rarities[rarityIndex].minted >= rarities[rarityIndex].maxSupply
+                finalRarityIndex > 0 &&
+                rarities[finalRarityIndex].minted >=
+                rarities[finalRarityIndex].maxSupply
             ) {
-                rarityIndex -= 1;
+                finalRarityIndex -= 1;
             }
         }
 
         // Falls keine Rarität verfügbar ist, Punkte zurückgeben
         if (
-            rarityIndex == 0 ||
-            rarities[rarityIndex].minted >= rarities[rarityIndex].maxSupply
+            finalRarityIndex == 0 ||
+            rarities[finalRarityIndex].minted >=
+            rarities[finalRarityIndex].maxSupply
         ) {
             owedRewards[request.user] += rarities[request.rollType].price;
             request.cancelled = true;
+            console.log("Mint failed for user %s", request.user);
             emit MintFailed(request.user, sequenceNumber);
             return;
         }
 
         // Mint-Logik, wenn Rarität verfügbar ist
-        selectedRarity.minted += 1;
+        rarities[finalRarityIndex].minted += 1;
         request.completed = true;
+
+        // URI für den geminteten Token erstellen
+        string memory fullUri = string(
+            abi.encodePacked(
+                rarities[finalRarityIndex].tokenUri,
+                Strings.toString(rarities[finalRarityIndex].minted),
+                ".json"
+            )
+        );
+        tokenURIs[request.tokenId] = fullUri;
+        mintRequests[sequenceNumber].uri = fullUri;
 
         // NFT minten
         _safeMint(request.user, request.tokenId);
@@ -379,6 +400,7 @@ contract DerpyDragonsV2 is
             tokenId: mintedDragonCount,
             randomNumber: 0,
             timestamp: block.timestamp,
+            uri: "",
             rollType: rollType,
             completed: false,
             cancelled: false
