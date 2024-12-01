@@ -12,8 +12,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IEntropyConsumer} from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 
-import "hardhat/console.sol";
-
 contract DerpyDragonsV2 is
     IEntropyConsumer,
     Initializable,
@@ -310,7 +308,6 @@ contract DerpyDragonsV2 is
         ) {
             owedRewards[request.user] += rarities[request.rollType].price;
             request.cancelled = true;
-            console.log("Mint failed for user %s", request.user);
             emit MintFailed(request.user, sequenceNumber);
             return;
         }
