@@ -277,6 +277,10 @@ describe("DerpyDragons Minting with Entropy", async function () {
 
       expect(request1.uri).to.equal("ar://common-folder/1.json");
 
+      expect(await derpyDragons.tokenURI(1)).to.equal(
+        "ar://common-folder/1.json"
+      );
+
       await derpyDragons.connect(user1).mintToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });

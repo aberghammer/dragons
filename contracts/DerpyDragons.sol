@@ -193,6 +193,18 @@ contract DerpyDragons is
     }
 
     /**
+     * @dev Returns the URI for a specific token ID.
+     * @param tokenId The ID of the token to retrieve the URI for.
+     * @return The URI associated with the token.
+     */
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
+        string memory uri = tokenURIs[tokenId];
+        return uri;
+    }
+
+    /**
      * @dev Allows a user to stake one or more tokens by transferring them to the contract.
      * Staking is only allowed when staking is open.
      * @param tokenIds An array of token IDs to be staked.
