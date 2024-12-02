@@ -112,7 +112,7 @@ contract DerpyDragons is
     function initialize(
         string calldata contractName_,
         string calldata contractSymbol_,
-        address _entropy,
+        address entropy_,
         uint256 pointsPerHourPerToken_,
         address dragonsAddress
     ) public initializer {
@@ -123,10 +123,9 @@ contract DerpyDragons is
         __ReentrancyGuard_init();
         __ERC721Holder_init();
         dragons = IERC721(dragonsAddress);
-        entropy = IEntropy(_entropy);
-        provider = entropy.getDefaultProvider();
+        entropy = IEntropy(entropy_);
+        provider = 0x52DeaA1c84233F7bb8C8A45baeDE41091c616506;
 
-        // Verwenden der sichereren Logik
         pointsPerHourPerToken = pointsPerHourPerToken_;
         pointsPerDayPerToken = pointsPerHourPerToken_ * 24;
         initializeRollTypes();

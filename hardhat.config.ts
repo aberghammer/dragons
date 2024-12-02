@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
+import "hardhat-contract-sizer";
 
 dotenv.config();
 
@@ -35,13 +36,18 @@ const config: HardhatUserConfig = {
       url: "https://curtis.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
     },
+    sepolia: {
+      url: "https://sepolia.infura.io/v3/6ff412932fd749c9b380385bd4d7c13d",
+      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      chainId: 11155111,
+    },
   },
   solidity: {
     version: "0.8.28",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 2000,
+        runs: 2,
       },
       outputSelection: {
         "*": {
