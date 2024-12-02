@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { MockEntropy, DerpyDragons } from "../typechain-types";
+import { rarityLevels, lowAmountRarityLevels } from "./rarityLevels";
 
 describe("DerpyDragons Minting with Entropy", async function () {
   async function mintingFixture() {
@@ -41,6 +42,8 @@ describe("DerpyDragons Minting with Entropy", async function () {
 
     const derpyDragons = derpyDragonsUntyped as unknown as DerpyDragons;
 
+    await derpyDragons.initializeRarityLevels(rarityLevels);
+
     // Set the DerpyDragons contract as the caller for the entropy contract
     await entropy.setCallerContract(await derpyDragons.getAddress());
 
@@ -56,6 +59,17 @@ describe("DerpyDragons Minting with Entropy", async function () {
   }
 
   describe("Minting with Randomness", async function () {
+    it("should initialize rarity levels correctly", async function () {
+      const { derpyDragons } = await loadFixture(mintingFixture);
+
+      for (let i = 0; i < rarityLevels.length; i++) {
+        const rarity = await derpyDragons.rarityLevels(i); // Assuming 1-based indexing
+        expect(rarity.minted).to.equal(0); // Default value
+        expect(rarity.maxSupply).to.equal(rarityLevels[i].maxSupply);
+        expect(rarity.tokenUri).to.equal(rarityLevels[i].tokenUri);
+      }
+    });
+
     it("should correctly handle a successful mint with randomness callback", async function () {
       const { user1, derpyDragons, dragons, entropy } = await loadFixture(
         mintingFixture
@@ -101,7 +115,7 @@ describe("DerpyDragons Minting with Entropy", async function () {
       // Manually trigger the entropy callback
       await entropy.fireCallbackManually(sequenceNumber, 12);
 
-      console.log("Minted token event:", await derpyDragons.mintRequests(1));
+      // console.log("Minted token event:", await derpyDragons.mintRequests(1));
 
       await derpyDragons.selectRarityAndMint(sequenceNumber);
 
@@ -118,21 +132,46 @@ describe("DerpyDragons Minting with Entropy", async function () {
       expect(mintedEvent.args!.user).to.equal(await user1.getAddress());
       expect(mintedEvent.args!.tokenId).to.equal(1);
 
-      console.log("Minted token event:", await derpyDragons.mintRequests(1));
+      // console.log("Minted token event:", await derpyDragons.mintRequests(1));
 
       expect(await derpyDragons.balanceOf(await user1.getAddress())).to.equal(
         1
       );
     });
 
+    it("should revert if mint request is not completed", async function () {
+      const { user1, derpyDragons, dragons, entropy } = await loadFixture(
+        mintingFixture
+      );
+
+      await derpyDragons.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await derpyDragons.getAddress(), true);
+      await derpyDragons.connect(user1).stake([1, 2, 3]);
+
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
+
+      // Initialize rarity levels
+      await derpyDragons.initializeRarityLevels(lowAmountRarityLevels);
+
+      // Simulate a mint token request
+      await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      // Do NOT trigger entropy callback (request remains incomplete)
+
+      // Attempt to select rarity and mint
+      await expect(
+        derpyDragons.selectRarityAndMint(1)
+      ).to.be.revertedWithCustomError(derpyDragons, "RequestNotCompleted");
+    });
+
     it("should revert if rollType is invalid", async function () {
       const { user1, derpyDragons } = await loadFixture(mintingFixture);
-
-      await expect(
-        derpyDragons
-          .connect(user1)
-          .mintToken(0, { value: ethers.parseEther("0.01") })
-      ).to.be.revertedWithCustomError(derpyDragons, "InvalidRollType");
 
       await expect(
         derpyDragons
@@ -148,7 +187,7 @@ describe("DerpyDragons Minting with Entropy", async function () {
       await expect(
         derpyDragons
           .connect(user1)
-          .mintToken(1, { value: ethers.parseEther("0.01") })
+          .mintToken(0, { value: ethers.parseEther("0.01") })
       )
         .to.be.revertedWithCustomError(derpyDragons, "InsufficientBalance")
         .withArgs(0, 1000); // Expect balance 0, required 1000
@@ -207,7 +246,234 @@ describe("DerpyDragons Minting with Entropy", async function () {
       expect(mintEvent.args!.user).to.equal(await user1.getAddress());
     });
 
-    it("should handle minting the highest rarity when selected rarity is unavailable", async function () {
+    it("should handle minting another rarity when selected rarity is unavailable", async function () {
+      const { user1, derpyDragons, dragons, entropy } = await loadFixture(
+        mintingFixture
+      );
+
+      await derpyDragons.initializeRarityLevels(lowAmountRarityLevels);
+      await derpyDragons.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await derpyDragons.getAddress(), true);
+      await derpyDragons.connect(user1).stake([4, 5, 6]);
+
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
+
+      // Mint token request
+      await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      // Trigger entropy callback to complete the randomness process
+      await entropy.fireCallbackManually(1, 5);
+
+      // Finalize the minting process
+      await derpyDragons.selectRarityAndMint(1);
+
+      const request1 = await derpyDragons.mintRequests(1);
+
+      expect(request1.uri).to.equal("ar://common-folder/1.json");
+
+      await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      // Trigger entropy callback to complete the randomness process
+      await entropy.fireCallbackManually(2, 5);
+
+      await derpyDragons.selectRarityAndMint(2);
+
+      const request2 = await derpyDragons.mintRequests(2);
+
+      expect(request2.uri).to.equal("ar://uncommon-folder/2.json");
+    });
+
+    it("should handle refund when no rarity is available", async function () {
+      const { user1, derpyDragons, dragons, entropy } = await loadFixture(
+        mintingFixture
+      );
+
+      // Initialize rarity levels
+      await derpyDragons.initializeRarityLevels(lowAmountRarityLevels);
+      await derpyDragons.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await derpyDragons.getAddress(), true);
+      await derpyDragons.connect(user1).stake([4, 5, 6]);
+
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
+
+      // First mint: Token from rarity index 0
+      await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      // Trigger entropy callback
+      await entropy.fireCallbackManually(1, 5);
+
+      // Finalize the minting process
+      await derpyDragons.selectRarityAndMint(1);
+
+      const request1 = await derpyDragons.mintRequests(1);
+      expect(request1.uri).to.equal("ar://common-folder/1.json");
+
+      // Second mint: Token from rarity index 1
+      await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      const rewardsBefore = await derpyDragons.owedRewards(
+        await user1.getAddress()
+      );
+
+      // Attempt to mint when no rarity is available
+      await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      const rewardsAfter = await derpyDragons.owedRewards(
+        await user1.getAddress()
+      );
+
+      // Trigger entropy callback
+      await entropy.fireCallbackManually(2, 5);
+
+      await derpyDragons.selectRarityAndMint(2);
+
+      const request2 = await derpyDragons.mintRequests(2);
+      expect(request2.uri).to.equal("ar://uncommon-folder/2.json");
+
+      expect(rewardsAfter).to.equal(rewardsBefore - 2000n); // Refund should match the rollType price
+
+      // Trigger entropy callback
+      await entropy.fireCallbackManually(3, 5);
+
+      // Finalize the minting process
+      await derpyDragons.selectRarityAndMint(3);
+
+      const rewardsEnd = await derpyDragons.owedRewards(
+        await user1.getAddress()
+      );
+
+      const request3 = await derpyDragons.mintRequests(3);
+
+      expect(rewardsBefore).to.equal(rewardsEnd); // Rewards should be depleted
+
+      expect(request3.cancelled).to.equal(true);
+
+      // Verify refund
+      const owedRewards = await derpyDragons.owedRewards(
+        await user1.getAddress()
+      );
+      expect(owedRewards).to.equal(rewardsBefore); // Refund should match the rollType price
+    });
+
+    it("should refund points for an expired mint request", async function () {
+      const { user1, derpyDragons, dragons, entropy } = await loadFixture(
+        mintingFixture
+      );
+
+      // Enable staking mode and stake tokens
+      await derpyDragons.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await derpyDragons.getAddress(), true);
+      await derpyDragons.connect(user1).stake([1, 2, 3]);
+
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
+
+      await derpyDragons.connect(user1).unstake([1, 2, 3]);
+
+      const initialRewards = await derpyDragons.pendingRewards(
+        await user1.getAddress()
+      );
+
+      // Submit a mint request
+      const tx = await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"),
+      });
+      const receipt = await tx.wait();
+
+      // Extract sequenceNumber from the MintRequested event
+      const mintEvent = (
+        await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
+      )[0];
+      const sequenceNumber = mintEvent.args![1];
+
+      // Try resolving before expiration
+      await expect(
+        derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber)
+      ).to.be.revertedWithCustomError(derpyDragons, "MintRequestNotYetExpired");
+
+      // Simulate expiration by advancing time
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 2]); // 2 more days
+      await ethers.provider.send("evm_mine", []);
+
+      // Resolve the expired mint request
+      await derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber);
+
+      const finalRewards = await derpyDragons.pendingRewards(
+        await user1.getAddress()
+      );
+
+      // Check that the request is marked as cancelled
+      const mintRequest = await derpyDragons.mintRequests(sequenceNumber);
+      expect(mintRequest.cancelled).to.equal(true);
+      expect(mintRequest.requestCompleted).to.equal(false);
+
+      // Check that MintFailed event was emitted
+      const mintFailedEvent = (
+        await derpyDragons.queryFilter(derpyDragons.filters.MintFailed())
+      )[0];
+      expect(mintFailedEvent.args![0]).to.equal(await user1.getAddress());
+      expect(mintFailedEvent.args![1]).to.equal(sequenceNumber);
+    });
+
+    it("should revert if trying to resolve a completed mint request", async function () {
+      const { user1, derpyDragons, dragons, entropy } = await loadFixture(
+        mintingFixture
+      );
+
+      // Enable staking mode and stake tokens
+      await derpyDragons.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await derpyDragons.getAddress(), true);
+      await derpyDragons.connect(user1).stake([4, 5, 6]);
+
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
+
+      // Submit a mint request
+      const tx = await derpyDragons.connect(user1).mintToken(2, {
+        value: ethers.parseEther("0.01"),
+      });
+      const receipt = await tx.wait();
+
+      // Extract sequenceNumber from the MintRequested event
+      const mintEvent = (
+        await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
+      )[0];
+      const sequenceNumber = mintEvent.args![1];
+
+      // Manually complete the mint
+      await entropy.fireCallbackManually(sequenceNumber, 42);
+
+      // Try resolving the completed mint
+      await expect(
+        derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber)
+      ).to.be.revertedWithCustomError(derpyDragons, "MintAlreadyCompleted");
+    });
+
+    it("should revert if attempting to mint the same sequenceNumber twice", async function () {
       const { user1, derpyDragons, dragons, entropy } = await loadFixture(
         mintingFixture
       );
@@ -216,353 +482,146 @@ describe("DerpyDragons Minting with Entropy", async function () {
       await dragons
         .connect(user1)
         .setApprovalForAll(await derpyDragons.getAddress(), true);
-      await derpyDragons.connect(user1).stake([1, 2, 3]);
+      await derpyDragons.connect(user1).stake([4, 5, 6]);
 
-      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]);
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
       await ethers.provider.send("evm_mine", []);
-
-      // Simulate minting the highest rarity
-      const tx = await derpyDragons.connect(user1).mintToken(6, {
+      // Submit a mint request
+      const tx = await derpyDragons.connect(user1).mintToken(1, {
         value: ethers.parseEther("0.01"),
       });
       const receipt = await tx.wait();
       const mintEvent = (
         await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
       )[0];
-
       const sequenceNumber = mintEvent.args![1];
-      await entropy.fireCallbackManually(sequenceNumber, 99); // Ensure Mythic is selected
 
+      // First callback completes the mint
+      await entropy.fireCallbackManually(sequenceNumber, 50);
       await derpyDragons.selectRarityAndMint(sequenceNumber);
 
-      const mintedEvent = (
-        await derpyDragons.queryFilter(derpyDragons.filters.TokenMinted())
-      )[0];
-
-      console.log("Minted token event:", await derpyDragons.mintRequests(1));
-      expect(mintedEvent.args!.user).to.equal(await user1.getAddress());
-      expect(await derpyDragons.tokenURIs(1)).to.include(
-        "ar://mythic-folder/1.json"
-      );
+      // Attempt to mint the same sequenceNumber again
+      await expect(
+        derpyDragons.selectRarityAndMint(sequenceNumber)
+      ).to.be.revertedWithCustomError(derpyDragons, "MintAlreadyCompleted");
     });
 
-    // it("should fallback to the next lower rarity if no higher rarity is available", async function () {
-    //   const { user1, derpyDragons, dragons, entropy } = await loadFixture(
-    //     mintingFixture
-    //   );
+    it("should revert if trying to resolve a cancelled mint request", async function () {
+      const { user1, derpyDragons, dragons } = await loadFixture(
+        mintingFixture
+      );
 
-    //   await derpyDragons.setStakingMode(true);
-    //   await dragons
-    //     .connect(user1)
-    //     .setApprovalForAll(await derpyDragons.getAddress(), true);
-    //   await derpyDragons.connect(user1).stake([4, 5, 6]);
+      // Enable staking mode and stake tokens
+      await derpyDragons.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await derpyDragons.getAddress(), true);
+      await derpyDragons.connect(user1).stake([7, 8, 9]);
 
-    //   await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 15]);
-    //   await ethers.provider.send("evm_mine", []);
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
 
-    //   // Simulate minting with the second-highest rarity depleted
-    //   const tx = await derpyDragons.connect(user1).mintToken(5, {
-    //     value: ethers.parseEther("0.01"),
-    //   });
-    //   const receipt = await tx.wait();
-    //   const mintEvent = (
-    //     await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
-    //   )[0];
+      // Submit a mint request
+      const tx = await derpyDragons.connect(user1).mintToken(3, {
+        value: ethers.parseEther("0.01"),
+      });
+      const receipt = await tx.wait();
 
-    //   const sequenceNumber = mintEvent.args![1];
-    //   await entropy.fireCallbackManually(sequenceNumber, 95); // Ensure Legendary
+      // Extract sequenceNumber from the MintRequested event
+      const mintEvent = (
+        await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
+      )[0];
+      const sequenceNumber = mintEvent.args![1];
 
-    //   const mintedEvent = (
-    //     await derpyDragons.queryFilter(derpyDragons.filters.TokenMinted())
-    //   )[0];
-    //   console.log("Minted token event:", await derpyDragons.mintRequests(1));
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 2]); // 10 days
+      await ethers.provider.send("evm_mine", []);
 
-    //   expect(mintedEvent.args!.user).to.equal(await user1.getAddress());
-    //   expect(await derpyDragons.tokenURIs(1)).to.include(
-    //     "ar://legendary-folder/1.json"
-    //   );
-    // });
+      // Manually cancel the request
+      await derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber);
 
-    //   it("should refund points if no rarity is available", async function () {
-    //     const { user1, derpyDragons, dragons, entropy } = await loadFixture(
-    //       mintingFixture
-    //     );
+      // Try resolving the already cancelled mint
+      await expect(
+        derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber)
+      ).to.be.revertedWithCustomError(
+        derpyDragons,
+        "MintRequestAlreadyCancelled"
+      );
+    });
+  });
 
-    //     await derpyDragons.setStakingMode(true);
-    //     await dragons
-    //       .connect(user1)
-    //       .setApprovalForAll(await derpyDragons.getAddress(), true);
-    //     await derpyDragons.connect(user1).stake([7, 8, 9]);
+  describe("Entropy reverts", async function () {
+    it("should revert if the mint request is already completed", async function () {
+      const { user1, derpyDragons, dragons, entropy } = await loadFixture(
+        mintingFixture
+      );
 
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 555]);
-    //     await ethers.provider.send("evm_mine", []);
+      // Mock a valid mint request
+      await derpyDragons.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await derpyDragons.getAddress(), true);
+      await derpyDragons.connect(user1).stake([7, 8, 9]);
 
-    //     console.log(
-    //       "before: ",
-    //       await derpyDragons.pendingRewards(await user1.getAddress())
-    //     );
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
 
-    //     // Deplete all rarities
-    //     for (let i = 0; i < 265; i++) {
-    //       await derpyDragons.connect(user1).mintToken(6, {
-    //         value: ethers.parseEther("0.01"),
-    //       });
-    //       await entropy.fireCallbackManually(
-    //         i + 1,
-    //         Math.floor(Math.random() * 100)
-    //       );
-    //     }
+      const tx = await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"),
+      });
+      const receipt = await tx.wait();
+      const mintEvent = (
+        await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
+      )[0];
+      const sequenceNumber = mintEvent.args![1];
 
-    //     console.log(
-    //       "after mint spree: ",
-    //       await derpyDragons.pendingRewards(await user1.getAddress())
-    //     );
-    //     // Attempt to mint when no rarities are left
-    //     await derpyDragons.connect(user1).mintToken(6, {
-    //       value: ethers.parseEther("0.01"),
-    //     });
+      // First callback completes the request
+      await entropy.fireCallbackManually(sequenceNumber, 50);
 
-    //     console.log(
-    //       "after last mint: ",
-    //       await derpyDragons.pendingRewards(await user1.getAddress())
-    //     );
+      // Second callback should revert
+      await expect(
+        entropy.fireCallbackManually(sequenceNumber, 50)
+      ).to.be.revertedWithCustomError(derpyDragons, "RequestAlreadyCompleted");
+    });
 
-    //     const sequenceNumber = 266;
-    //     await entropy.fireCallbackManually(sequenceNumber, 99);
+    it("should revert if the mint request is already cancelled", async function () {
+      const { user1, derpyDragons, entropy, dragons } = await loadFixture(
+        mintingFixture
+      );
 
-    //     console.log(
-    //       "last: ",
-    //       await derpyDragons.pendingRewards(await user1.getAddress())
-    //     );
+      // Mock a mint request
+      await derpyDragons.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await derpyDragons.getAddress(), true);
+      await derpyDragons.connect(user1).stake([7, 8, 9]);
 
-    //     // console.log("Minted token event:", await derpyDragons.mintRequests(266));
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
 
-    //     console.log("totalSupply: ", await derpyDragons.totalSupply());
+      const tx = await derpyDragons.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"),
+      });
+      const receipt = await tx.wait();
+      const mintEvent = (
+        await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
+      )[0];
+      const sequenceNumber = mintEvent.args![1];
 
-    //     // expect(failedEvent.args!.user).to.equal(await user1.getAddress());
-    //     expect(await derpyDragons.owedRewards(await user1.getAddress())).to.equal(
-    //       8415
-    //     );
-    //   });
-    //   it("should refund points for an expired mint request", async function () {
-    //     const { user1, derpyDragons, dragons, entropy } = await loadFixture(
-    //       mintingFixture
-    //     );
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 1]); // 1 days
+      await ethers.provider.send("evm_mine", []);
 
-    //     // Enable staking mode and stake tokens
-    //     await derpyDragons.setStakingMode(true);
-    //     await dragons
-    //       .connect(user1)
-    //       .setApprovalForAll(await derpyDragons.getAddress(), true);
-    //     await derpyDragons.connect(user1).stake([1, 2, 3]);
+      // Cancel the mint request
+      await derpyDragons.resolveExpiredMint(sequenceNumber);
 
-    //     // Advance time to accumulate rewards
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
-    //     await ethers.provider.send("evm_mine", []);
-
-    //     await derpyDragons.connect(user1).unstake([1, 2, 3]);
-
-    //     const initialRewards = await derpyDragons.pendingRewards(
-    //       await user1.getAddress()
-    //     );
-
-    //     // Submit a mint request
-    //     const tx = await derpyDragons.connect(user1).mintToken(1, {
-    //       value: ethers.parseEther("0.01"),
-    //     });
-    //     const receipt = await tx.wait();
-
-    //     // Extract sequenceNumber from the MintRequested event
-    //     const mintEvent = (
-    //       await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
-    //     )[0];
-    //     const sequenceNumber = mintEvent.args![1];
-
-    //     // Try resolving before expiration
-    //     await expect(
-    //       derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber)
-    //     ).to.be.revertedWithCustomError(derpyDragons, "MintRequestNotYetExpired");
-
-    //     // Simulate expiration by advancing time
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 2]); // 2 more days
-    //     await ethers.provider.send("evm_mine", []);
-
-    //     // Resolve the expired mint request
-    //     await derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber);
-
-    //     const finalRewards = await derpyDragons.pendingRewards(
-    //       await user1.getAddress()
-    //     );
-
-    //     // Check that rewards were refunded
-    //     const price = (await derpyDragons.rarities(1)).price;
-    //     expect(finalRewards).to.equal(initialRewards);
-
-    //     // Check that the request is marked as cancelled
-    //     const mintRequest = await derpyDragons.mintRequests(sequenceNumber);
-    //     expect(mintRequest.cancelled).to.equal(true);
-    //     expect(mintRequest.completed).to.equal(false);
-
-    //     // Check that MintFailed event was emitted
-    //     const mintFailedEvent = (
-    //       await derpyDragons.queryFilter(derpyDragons.filters.MintFailed())
-    //     )[0];
-    //     expect(mintFailedEvent.args![0]).to.equal(await user1.getAddress());
-    //     expect(mintFailedEvent.args![1]).to.equal(sequenceNumber);
-    //   });
-
-    //   it("should revert if trying to resolve a completed mint request", async function () {
-    //     const { user1, derpyDragons, dragons, entropy } = await loadFixture(
-    //       mintingFixture
-    //     );
-
-    //     // Enable staking mode and stake tokens
-    //     await derpyDragons.setStakingMode(true);
-    //     await dragons
-    //       .connect(user1)
-    //       .setApprovalForAll(await derpyDragons.getAddress(), true);
-    //     await derpyDragons.connect(user1).stake([4, 5, 6]);
-
-    //     // Advance time to accumulate rewards
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
-    //     await ethers.provider.send("evm_mine", []);
-
-    //     // Submit a mint request
-    //     const tx = await derpyDragons.connect(user1).mintToken(2, {
-    //       value: ethers.parseEther("0.01"),
-    //     });
-    //     const receipt = await tx.wait();
-
-    //     // Extract sequenceNumber from the MintRequested event
-    //     const mintEvent = (
-    //       await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
-    //     )[0];
-    //     const sequenceNumber = mintEvent.args![1];
-
-    //     // Manually complete the mint
-    //     await entropy.fireCallbackManually(sequenceNumber, 42);
-
-    //     // Try resolving the completed mint
-    //     await expect(
-    //       derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber)
-    //     ).to.be.revertedWithCustomError(derpyDragons, "MintAlreadyCompleted");
-    //   });
-
-    //   it("should revert if trying to resolve a cancelled mint request", async function () {
-    //     const { user1, derpyDragons, dragons } = await loadFixture(
-    //       mintingFixture
-    //     );
-
-    //     // Enable staking mode and stake tokens
-    //     await derpyDragons.setStakingMode(true);
-    //     await dragons
-    //       .connect(user1)
-    //       .setApprovalForAll(await derpyDragons.getAddress(), true);
-    //     await derpyDragons.connect(user1).stake([7, 8, 9]);
-
-    //     // Advance time to accumulate rewards
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
-    //     await ethers.provider.send("evm_mine", []);
-
-    //     // Submit a mint request
-    //     const tx = await derpyDragons.connect(user1).mintToken(3, {
-    //       value: ethers.parseEther("0.01"),
-    //     });
-    //     const receipt = await tx.wait();
-
-    //     // Extract sequenceNumber from the MintRequested event
-    //     const mintEvent = (
-    //       await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
-    //     )[0];
-    //     const sequenceNumber = mintEvent.args![1];
-
-    //     // Advance time to accumulate rewards
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 2]); // 10 days
-    //     await ethers.provider.send("evm_mine", []);
-
-    //     // Manually cancel the request
-    //     await derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber);
-
-    //     // Try resolving the already cancelled mint
-    //     await expect(
-    //       derpyDragons.connect(user1).resolveExpiredMint(sequenceNumber)
-    //     ).to.be.revertedWithCustomError(
-    //       derpyDragons,
-    //       "MintRequestAlreadyCancelled"
-    //     );
-    //   });
-    // });
-
-    // describe("Entropy reverts", async function () {
-    //   it("should revert if the mint request is already completed", async function () {
-    //     const { user1, derpyDragons, dragons, entropy } = await loadFixture(
-    //       mintingFixture
-    //     );
-
-    //     // Mock a valid mint request
-    //     await derpyDragons.setStakingMode(true);
-    //     await dragons
-    //       .connect(user1)
-    //       .setApprovalForAll(await derpyDragons.getAddress(), true);
-    //     await derpyDragons.connect(user1).stake([7, 8, 9]);
-
-    //     // Advance time to accumulate rewards
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
-    //     await ethers.provider.send("evm_mine", []);
-
-    //     const tx = await derpyDragons.connect(user1).mintToken(1, {
-    //       value: ethers.parseEther("0.01"),
-    //     });
-    //     const receipt = await tx.wait();
-    //     const mintEvent = (
-    //       await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
-    //     )[0];
-    //     const sequenceNumber = mintEvent.args![1];
-
-    //     // First callback completes the request
-    //     await entropy.fireCallbackManually(sequenceNumber, 50);
-
-    //     // Second callback should revert
-    //     await expect(
-    //       entropy.fireCallbackManually(sequenceNumber, 50)
-    //     ).to.be.revertedWithCustomError(derpyDragons, "RequestAlreadyCompleted");
-    //   });
-
-    //   it("should revert if the mint request is already cancelled", async function () {
-    //     const { user1, derpyDragons, entropy, dragons } = await loadFixture(
-    //       mintingFixture
-    //     );
-
-    //     // Mock a mint request
-    //     await derpyDragons.setStakingMode(true);
-    //     await dragons
-    //       .connect(user1)
-    //       .setApprovalForAll(await derpyDragons.getAddress(), true);
-    //     await derpyDragons.connect(user1).stake([7, 8, 9]);
-
-    //     // Advance time to accumulate rewards
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
-    //     await ethers.provider.send("evm_mine", []);
-
-    //     const tx = await derpyDragons.connect(user1).mintToken(1, {
-    //       value: ethers.parseEther("0.01"),
-    //     });
-    //     const receipt = await tx.wait();
-    //     const mintEvent = (
-    //       await derpyDragons.queryFilter(derpyDragons.filters.MintRequested())
-    //     )[0];
-    //     const sequenceNumber = mintEvent.args![1];
-
-    //     await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 1]); // 1 days
-    //     await ethers.provider.send("evm_mine", []);
-
-    //     // Cancel the mint request
-    //     await derpyDragons.resolveExpiredMint(sequenceNumber);
-
-    //     // Callback after cancellation should revert
-    //     await expect(
-    //       entropy.fireCallbackManually(sequenceNumber, 50)
-    //     ).to.be.revertedWithCustomError(derpyDragons, "RequestAlreadyCancelled");
-    //   });
+      // Callback after cancellation should revert
+      await expect(
+        entropy.fireCallbackManually(sequenceNumber, 50)
+      ).to.be.revertedWithCustomError(derpyDragons, "RequestAlreadyCancelled");
+    });
   });
 });

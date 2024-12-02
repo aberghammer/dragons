@@ -4,6 +4,7 @@ import "@openzeppelin/hardhat-upgrades";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { DerpyDragons } from "../typechain-types";
+import { rarityLevels } from "./rarityLevels";
 
 describe("DerpyDragons Admin Tests", async function () {
   async function adminFixture() {
@@ -35,6 +36,8 @@ describe("DerpyDragons Admin Tests", async function () {
     await derpyDragonsUntyped.waitForDeployment();
 
     const derpyDragons = derpyDragonsUntyped as unknown as DerpyDragons;
+
+    await derpyDragons.initializeRarityLevels(rarityLevels);
 
     return {
       owner,
@@ -127,6 +130,17 @@ describe("DerpyDragons Admin Tests", async function () {
 
       await expect(
         derpyDragons.connect(user1).setStakingMode(true)
+      ).to.be.revertedWithCustomError(
+        derpyDragons,
+        "OwnableUnauthorizedAccount"
+      );
+    });
+
+    it("should revert if a non-owner tries to set rarity intialization", async function () {
+      const { user1, derpyDragons } = await loadFixture(adminFixture);
+
+      await expect(
+        derpyDragons.connect(user1).initializeRarityLevels(rarityLevels)
       ).to.be.revertedWithCustomError(
         derpyDragons,
         "OwnableUnauthorizedAccount"

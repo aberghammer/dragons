@@ -5,6 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 import { expect } from "chai";
 import { DerpyDragons } from "../typechain-types";
+import { rarityLevels } from "./rarityLevels";
 
 describe("DerpyDragons Tests", async function () {
   async function cbcFixture() {
@@ -37,6 +38,8 @@ describe("DerpyDragons Tests", async function () {
     await derpyDragonsUntyped.waitForDeployment();
 
     const derpyDragons = derpyDragonsUntyped as unknown as DerpyDragons;
+
+    await derpyDragons.initializeRarityLevels(rarityLevels);
 
     // console.log(await derpyDragons.getAddress());
     return {
