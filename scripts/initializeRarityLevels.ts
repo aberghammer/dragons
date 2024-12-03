@@ -5,10 +5,10 @@ dotEnvConfig();
 
 async function main() {
   // Contract deployment address (replace with your deployed contract's address)
-  const derpyDragonsAddress = "0xCa4A12ce2837a188630616d45aC887eB0Adace7F"; // Example address
+  const derpyDragonsAddress = "0xcEfD3FabE761b87D3629a6649753bb911F7C49bb"; // Example address
 
   // Get the contract factory and attach to the deployed address
-  const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
+  const DerpyDragons = await ethers.getContractFactory("DragonsLair");
   const derpyDragonsContract = DerpyDragons.attach(derpyDragonsAddress);
 
   // Call setStakingMode with the desired mode

@@ -12,14 +12,18 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IEntropyConsumer} from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 
-import "hardhat/console.sol";
+interface IDerpyDragons {
+    /// @notice Mints a new token to the specified address with the given token URI.
+    /// @param to The address to receive the newly minted token.
+    /// @param tokenUri The metadata URI for the minted token.
+    function mint(address to, string memory tokenUri) external;
+}
 
-contract DerpyDragonsV2 is
+contract DragonsLair is
     IEntropyConsumer,
     Initializable,
     OwnableUpgradeable,
     UUPSUpgradeable,
-    ERC721EnumerableUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC721HolderUpgradeable
 {
@@ -85,9 +89,11 @@ contract DerpyDragonsV2 is
     uint public pointsPerHourPerToken;
     uint public pointsPerDayPerToken;
     uint public mintedDragonCount;
+    uint public mintRequestId;
     bool internal stakingInProgress;
     address[] public allStakers;
     IERC721 public dragons;
+    IDerpyDragons public derpyDragons;
     IEntropy public entropy;
     address public provider;
 
@@ -99,7 +105,7 @@ contract DerpyDragonsV2 is
     mapping(address => uint256) public owedRewards;
     mapping(uint64 => uint256) public requestIdToMintId;
     mapping(uint64 => MintRequest) public mintRequests;
-    mapping(uint256 => string) public tokenURIs;
+    mapping(address => uint256[]) public mintRequestsByUser;
 
     mapping(uint8 => RollType) public rollTypes;
     mapping(uint8 => RarityLevel) public rarityLevels;
@@ -110,23 +116,20 @@ contract DerpyDragonsV2 is
     }
 
     function initialize(
-        string calldata contractName_,
-        string calldata contractSymbol_,
-        address _entropy,
+        address entropy_,
         uint256 pointsPerHourPerToken_,
-        address dragonsAddress
+        address dragonsAddress,
+        address derpyDragonsAddress_
     ) public initializer {
         __Ownable_init(msg.sender);
-        __ERC721_init(contractName_, contractSymbol_);
-        __ERC721Enumerable_init();
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         __ERC721Holder_init();
+        derpyDragons = IDerpyDragons(derpyDragonsAddress_);
         dragons = IERC721(dragonsAddress);
-        entropy = IEntropy(_entropy);
-        provider = entropy.getDefaultProvider();
+        entropy = IEntropy(entropy_);
+        provider = 0x52DeaA1c84233F7bb8C8A45baeDE41091c616506;
 
-        // Verwenden der sichereren Logik
         pointsPerHourPerToken = pointsPerHourPerToken_;
         pointsPerDayPerToken = pointsPerHourPerToken_ * 24;
         initializeRollTypes();
@@ -180,6 +183,12 @@ contract DerpyDragonsV2 is
 
     function getEntropy() internal view override returns (address) {
         return address(entropy); // Return the stored entropy contract address
+    }
+
+    function getmintRequestsByUser(
+        address user
+    ) external view returns (uint256[] memory) {
+        return mintRequestsByUser[user];
     }
 
     function setPointsPerDayPerToken(uint256 pointsPerDay) external onlyOwner {
@@ -361,24 +370,26 @@ contract DerpyDragonsV2 is
 
         // Mint-Logik, wenn Rarität verfügbar ist
         rarityLevels[finalRarityIndex].minted += 1;
+        mintedDragonCount += 1;
+
+        request.tokenId = mintedDragonCount;
 
         // URI für den geminteten Token erstellen
         string memory fullUri = string(
             abi.encodePacked(
                 rarityLevels[finalRarityIndex].tokenUri,
-                Strings.toString(request.tokenId),
+                Strings.toString(mintedDragonCount),
                 ".json"
             )
         );
 
-        tokenURIs[request.tokenId] = fullUri;
         mintRequests[sequenceNumber].uri = fullUri;
         mintRequests[sequenceNumber].mintFinalized = true;
 
         // NFT minten
-        _safeMint(request.user, request.tokenId);
+        derpyDragons.mint(request.user, fullUri);
 
-        emit TokenMinted(request.user, request.tokenId);
+        emit TokenMinted(request.user, mintedDragonCount);
     }
 
     function mintToken(uint8 rollType) external payable nonReentrant {
@@ -411,11 +422,11 @@ contract DerpyDragonsV2 is
         uint256 rewardsLeft = allRewards - pointsRequired;
         owedRewards[msg.sender] = rewardsLeft;
 
-        mintedDragonCount += 1;
+        mintRequestId += 1;
 
         mintRequests[sequenceNumber] = MintRequest({
             user: msg.sender,
-            tokenId: mintedDragonCount,
+            tokenId: 0,
             randomNumber: 0,
             timestamp: block.timestamp,
             uri: "",
@@ -424,6 +435,9 @@ contract DerpyDragonsV2 is
             cancelled: false,
             mintFinalized: false
         });
+
+        requestIdToMintId[sequenceNumber] = mintRequestId;
+        mintRequestsByUser[msg.sender].push(sequenceNumber);
 
         emit MintRequested(msg.sender, sequenceNumber);
     }
@@ -577,6 +591,6 @@ contract DerpyDragonsV2 is
     ) internal override onlyOwner {}
 
     function version() public pure returns (string memory) {
-        return "2.0";
+        return "1.0";
     }
 }

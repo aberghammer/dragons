@@ -1,0 +1,21 @@
+{
+  "name": "derpydragonserc721c",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.16"
+  },
+  "dependencies": {
+    "@limitbreak/creator-token-contracts": "^1.1.2",
+    "@openzeppelin/contracts": "^4.8.3",
+    "colorette": "^2.0.20",
+    "dotenv": "^16.4.6"
+  }
+}
