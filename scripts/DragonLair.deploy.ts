@@ -15,6 +15,7 @@ async function main() {
       10000n,
       "0x095a8aa22cf86e222fbc0f829ae9d0831d8c52bc", //R`s on ape
       "0x25402FfD2e63844Bc649e2d551723657cC389FDA",
+      "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506", //Provider
     ],
     {
       initializer: "initialize",

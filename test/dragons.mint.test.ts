@@ -40,6 +40,7 @@ describe("DragonsLair Minting with Entropy", async function () {
         40,
         await dragons.getAddress(),
         await derpyDragons.getAddress(),
+        "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
       ],
       { initializer: "initialize" }
     );
@@ -96,7 +97,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_mine", []);
 
       // Mint token request
-      const tx = await dragonsLair.connect(user1).mintToken(1, {
+      const tx = await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
       const receipt = await tx.wait();
@@ -166,7 +167,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await dragonsLair.initializeRarityLevels(lowAmountRarityLevels);
 
       // Simulate a mint token request
-      await dragonsLair.connect(user1).mintToken(1, {
+      await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
@@ -184,7 +185,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await expect(
         dragonsLair
           .connect(user1)
-          .mintToken(7, { value: ethers.parseEther("0.01") })
+          .requestToken(7, { value: ethers.parseEther("0.01") })
       ).to.be.revertedWithCustomError(dragonsLair, "InvalidRollType");
     });
 
@@ -195,7 +196,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await expect(
         dragonsLair
           .connect(user1)
-          .mintToken(0, { value: ethers.parseEther("0.01") })
+          .requestToken(0, { value: ethers.parseEther("0.01") })
       )
         .to.be.revertedWithCustomError(dragonsLair, "InsufficientBalance")
         .withArgs(0, 1000); // Expect balance 0, required 1000
@@ -219,7 +220,7 @@ describe("DragonsLair Minting with Entropy", async function () {
 
       // Provide less than required fee
       await expect(
-        dragonsLair.connect(user1).mintToken(1, {
+        dragonsLair.connect(user1).requestToken(1, {
           value: ethers.parseEther("0.009"),
         })
       ).to.be.revertedWithCustomError(dragonsLair, "InsufficientFee");
@@ -242,7 +243,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_mine", []);
 
       // Successful mint
-      const tx = await dragonsLair.connect(user1).mintToken(1, {
+      const tx = await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"),
       });
       await tx.wait();
@@ -270,11 +271,11 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_mine", []);
 
       // Mint token request
-      await dragonsLair.connect(user1).mintToken(1, {
+      await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
-      await dragonsLair.connect(user1).mintToken(1, {
+      await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
@@ -318,11 +319,11 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_mine", []);
 
       // Mint token request
-      await dragonsLair.connect(user1).mintToken(1, {
+      await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
-      await dragonsLair.connect(user1).mintToken(1, {
+      await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
@@ -335,7 +336,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await dragonsLair.selectRarityAndMint(2);
 
       await expect(
-        dragonsLair.connect(user1).mintToken(1)
+        dragonsLair.connect(user1).requestToken(1)
       ).to.be.revertedWithCustomError(dragonsLair, "NoMintsLeft");
     });
 
@@ -357,7 +358,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_mine", []);
 
       // First mint: Token from rarity index 0
-      await dragonsLair.connect(user1).mintToken(1, {
+      await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
@@ -371,7 +372,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       expect(request1.uri).to.equal("ar://common-folder/1.json");
 
       // Second mint: Token from rarity index 1
-      await dragonsLair.connect(user1).mintToken(1, {
+      await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
       const rewardsBefore = await dragonsLair.owedRewards(
@@ -379,7 +380,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       );
 
       // Attempt to mint when no rarity is available
-      await dragonsLair.connect(user1).mintToken(1, {
+      await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
@@ -447,7 +448,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       );
 
       // Submit a mint request
-      const tx = await dragonsLair.connect(user1).mintToken(1, {
+      const tx = await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"),
       });
       const receipt = await tx.wait();
@@ -504,7 +505,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_mine", []);
 
       // Submit a mint request
-      const tx = await dragonsLair.connect(user1).mintToken(2, {
+      const tx = await dragonsLair.connect(user1).requestToken(2, {
         value: ethers.parseEther("0.01"),
       });
       const receipt = await tx.wait();
@@ -539,7 +540,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
       await ethers.provider.send("evm_mine", []);
       // Submit a mint request
-      const tx = await dragonsLair.connect(user1).mintToken(1, {
+      const tx = await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"),
       });
       const receipt = await tx.wait();
@@ -573,7 +574,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_mine", []);
 
       // Submit a mint request
-      const tx = await dragonsLair.connect(user1).mintToken(3, {
+      const tx = await dragonsLair.connect(user1).requestToken(3, {
         value: ethers.parseEther("0.01"),
       });
       const receipt = await tx.wait();
@@ -618,7 +619,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
       await ethers.provider.send("evm_mine", []);
 
-      const tx = await dragonsLair.connect(user1).mintToken(1, {
+      const tx = await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"),
       });
       const receipt = await tx.wait();
@@ -652,7 +653,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
       await ethers.provider.send("evm_mine", []);
 
-      const tx = await dragonsLair.connect(user1).mintToken(1, {
+      const tx = await dragonsLair.connect(user1).requestToken(1, {
         value: ethers.parseEther("0.01"),
       });
       const receipt = await tx.wait();

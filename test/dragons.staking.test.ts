@@ -37,6 +37,7 @@ describe("DragonsLair Tests", async function () {
         40,
         await dragons.getAddress(),
         await derpyDragons.getAddress(),
+        "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
       ],
       { initializer: "initialize" }
     );

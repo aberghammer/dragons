@@ -35,6 +35,7 @@ describe("DragonsLair Admin Tests", async function () {
         1000,
         await dragons.getAddress(),
         await derpyDragons.getAddress(),
+        "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
       ],
       { initializer: "initialize" }
     );
@@ -265,6 +266,7 @@ describe("DragonsLair Admin Tests", async function () {
           1000,
           await owner.getAddress(),
           await owner.getAddress(),
+          "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
         ],
         { initializer: "initialize" }
       );
@@ -306,6 +308,37 @@ describe("DragonsLair Admin Tests", async function () {
       const rarityLevel0 = await dragonsLair.rarityLevels(0);
       expect(rarityLevel0.maxSupply).to.equal(100);
       expect(rarityLevel0.tokenUri).to.equal("ar://common-folder/");
+    });
+  });
+  describe("setProvider", async function () {
+    it("should allow the owner to set the provider", async function () {
+      const { owner, dragonsLair } = await loadFixture(adminFixture);
+
+      const newProvider = "0x000000000000000000000000000000000000dEaD"; // Beispiel-Adresse
+
+      // Owner setzt den Provider
+      await expect(dragonsLair.connect(owner).setProvider(newProvider))
+        .to.emit(dragonsLair, "ProviderUpdated") // Falls es ein Event gibt, kannst du es hier prüfen
+        .withArgs(newProvider);
+
+      // Überprüfen, ob der Provider korrekt gesetzt wurde
+      //@ts-ignore
+      const provider = await dragonsLair.provider();
+      expect(provider).to.equal(newProvider);
+    });
+
+    it("should revert if a non-owner tries to set the provider", async function () {
+      const { user1, dragonsLair } = await loadFixture(adminFixture);
+
+      const newProvider = "0x000000000000000000000000000000000000dEaD"; // Beispiel-Adresse
+
+      // Nicht-Owner versucht den Provider zu ändern
+      await expect(
+        dragonsLair.connect(user1).setProvider(newProvider)
+      ).to.be.revertedWithCustomError(
+        dragonsLair,
+        "OwnableUnauthorizedAccount"
+      );
     });
   });
 });
