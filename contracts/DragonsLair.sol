@@ -179,7 +179,6 @@ contract DragonsLair is
         for (uint8 i = 0; i < newRollTypes.length; i++) {
             uint256 totalProbability = 0;
 
-            // Validierung der Wahrscheinlichkeiten
             for (uint8 j = 0; j < newRollTypes[i].probabilities.length; j++) {
                 totalProbability += newRollTypes[i].probabilities[j];
             }
@@ -188,7 +187,6 @@ contract DragonsLair is
                 revert InvalidProbabilitySum();
             }
 
-            // Roll-Typ initialisieren
             rollTypes[i] = newRollTypes[i];
         }
         rolesInitialized = true;
@@ -515,7 +513,7 @@ contract DragonsLair is
         if (request.cancelled) {
             revert RequestAlreadyCancelled(sequenceNumber);
         }
-        // Zufallszahl speichern
+
         request.randomNumber = uint256(randomNumber);
         request.requestCompleted = true;
 
