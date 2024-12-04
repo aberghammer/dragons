@@ -46,6 +46,12 @@ contract DragonsLair is
     error MintRequestAlreadyCancelled(uint64 sequenceNumber);
     error MintRequestNotYetExpired(uint64 requestId, uint256 timeLeft);
     error InvalidRollType();
+    error InputMismatch();
+    error TooManyRollTypes();
+    error InvalidProbabilitySum();
+    error ConfigMismatch();
+    error RollsNotInitialized();
+    error NoMintsLeft();
 
     event StakingModeUpdated(bool open);
     event Staked(address indexed user, uint256 tokenId);
@@ -56,6 +62,8 @@ contract DragonsLair is
     event MintRequested(address indexed user, uint64 requestId);
     event MintFailed(address indexed user, uint64 requestId);
     event TokenReadyForMint(address indexed user, uint64 requestId);
+    event RollTypesInitialized();
+    event RarityLevelsInitialized();
 
     struct StakedTokens {
         address owner; // The current owner of the staked token.
@@ -82,7 +90,7 @@ contract DragonsLair is
 
     struct RollType {
         uint256 price; // Punkte, die benötigt werden
-        uint256[6] probabilities; // Wahrscheinlichkeiten für jede Stufe
+        uint256[] probabilities; // Wahrscheinlichkeiten für jede Stufe
     }
 
     bool public stakingOpen;
@@ -96,6 +104,9 @@ contract DragonsLair is
     IDerpyDragons public derpyDragons;
     IEntropy public entropy;
     address public provider;
+    bool public rolesInitialized;
+    bool public rarityLevelsInitialized;
+    uint public existingRolls;
 
     mapping(address user => uint256[] stakedTokens) public stakedTokenIds;
     mapping(uint256 tokenId => StakedTokens stakedTokens)
@@ -132,7 +143,6 @@ contract DragonsLair is
 
         pointsPerHourPerToken = pointsPerHourPerToken_;
         pointsPerDayPerToken = pointsPerHourPerToken_ * 24;
-        initializeRollTypes();
 
         stakedTokenIds[address(0)].push();
     }
@@ -145,6 +155,8 @@ contract DragonsLair is
     function initializeRarityLevels(
         RarityLevel[] memory _rarityLevels
     ) external onlyOwner {
+        if (!rolesInitialized) revert RollsNotInitialized();
+        if (_rarityLevels.length != existingRolls) revert ConfigMismatch();
         for (uint8 i = 0; i < _rarityLevels.length; i++) {
             rarityLevels[i] = RarityLevel({
                 minted: 0,
@@ -152,33 +164,31 @@ contract DragonsLair is
                 tokenUri: _rarityLevels[i].tokenUri
             });
         }
+        rarityLevelsInitialized = true;
+        emit RarityLevelsInitialized();
     }
 
-    function initializeRollTypes() internal {
-        rollTypes[0] = RollType({
-            price: 1000,
-            probabilities: [uint256(100), 0, 0, 0, 0, 0] // 100% Common
-        });
-        rollTypes[1] = RollType({
-            price: 2000,
-            probabilities: [uint256(60), 40, 0, 0, 0, 0] // 60% Common, 40% Uncommon
-        });
-        rollTypes[2] = RollType({
-            price: 3000,
-            probabilities: [uint256(50), 40, 10, 0, 0, 0] // 50% Common, 40% Uncommon, 10% Rare
-        });
-        rollTypes[3] = RollType({
-            price: 4000,
-            probabilities: [uint256(45), 35, 15, 5, 0, 0] // 45% Common, 35% Uncommon, ...
-        });
-        rollTypes[4] = RollType({
-            price: 5000,
-            probabilities: [uint256(40), 30, 15, 10, 5, 0]
-        });
-        rollTypes[5] = RollType({
-            price: 6000,
-            probabilities: [uint256(35), 25, 15, 15, 5, 5] // 35% Common, 25% Uncommon, ...
-        });
+    function initializeRollTypes(
+        RollType[] memory newRollTypes
+    ) external onlyOwner {
+        for (uint8 i = 0; i < newRollTypes.length; i++) {
+            uint256 totalProbability = 0;
+
+            // Validierung der Wahrscheinlichkeiten
+            for (uint8 j = 0; j < newRollTypes[i].probabilities.length; j++) {
+                totalProbability += newRollTypes[i].probabilities[j];
+            }
+
+            if (totalProbability != 100) {
+                revert InvalidProbabilitySum();
+            }
+
+            // Roll-Typ initialisieren
+            rollTypes[i] = newRollTypes[i];
+        }
+        rolesInitialized = true;
+        existingRolls = newRollTypes.length;
+        emit RollTypesInitialized();
     }
 
     function getEntropy() internal view override returns (address) {
@@ -199,6 +209,13 @@ contract DragonsLair is
 
     function getAllStakers() external view returns (address[] memory) {
         return allStakers;
+    }
+
+    function getRollTypeById(
+        uint8 rollTypeId
+    ) external view returns (RollType memory) {
+        RollType storage rollType = rollTypes[rollTypeId];
+        return (rollType);
     }
 
     /**
@@ -304,7 +321,7 @@ contract DragonsLair is
             revert MintAlreadyCompleted(sequenceNumber);
         }
 
-        uint8[6] memory availableRarities; // Speicherplatz für maximal 6 Raritäten
+        uint8[] memory availableRarities = new uint8[](existingRolls);
         uint256 randomValue = request.randomNumber % 100; // Zufallswert zwischen 0 und 99
         uint8 finalRarityIndex = 0; // Platzhalter für die endgültige Rarität
         uint256 cumulativeProbability = 0; // Kumulative Wahrscheinlichkeit
@@ -312,7 +329,7 @@ contract DragonsLair is
         uint256 availableCount = 0; // Zähler für verfügbare Raritäten
 
         // Prüfe verfügbare Raritäten
-        for (uint8 i = 0; i < 6; i++) {
+        for (uint8 i = 0; i < existingRolls; i++) {
             // wenn die Rarität noch nicht ausverkauft ist
             if (rarityLevels[i].minted < rarityLevels[i].maxSupply) {
                 availableRarities[availableCount] = i; // Speichere die verfügbare Rarität
@@ -393,7 +410,29 @@ contract DragonsLair is
     }
 
     function mintToken(uint8 rollType) external payable nonReentrant {
-        if (rollType > 5) revert InvalidRollType();
+        if (rollType > existingRolls) revert InvalidRollType();
+
+        RollType storage selectedRollType = rollTypes[rollType];
+        bool hasMintCapacity = false;
+
+        // Überprüfe die Mint-Kapazität für alle relevanten Wahrscheinlichkeiten
+        for (uint8 i = 0; i < selectedRollType.probabilities.length; i++) {
+            // Überspringe Wahrscheinlichkeiten von 0
+            if (selectedRollType.probabilities[i] == 0) {
+                continue;
+            }
+
+            // Prüfe, ob Mint-Kapazität vorhanden ist
+            if (rarityLevels[i].minted < rarityLevels[i].maxSupply) {
+                hasMintCapacity = true;
+                break; // Mint-Kapazität gefunden, keine weitere Prüfung erforderlich
+            }
+        }
+
+        // Wenn keine Mint-Kapazität gefunden wurde, breche ab
+        if (!hasMintCapacity) {
+            revert NoMintsLeft();
+        }
 
         uint256 pointsRequired = rollTypes[rollType].price;
 
@@ -414,15 +453,14 @@ contract DragonsLair is
             revert InsufficientFee(msg.value, fee);
         }
 
+        uint256 rewardsLeft = allRewards - pointsRequired;
+        owedRewards[msg.sender] = rewardsLeft;
+        mintRequestId += 1;
+
         uint64 sequenceNumber = entropy.requestWithCallback{value: fee}(
             provider,
             keccak256(abi.encodePacked(block.timestamp, msg.sender))
         );
-
-        uint256 rewardsLeft = allRewards - pointsRequired;
-        owedRewards[msg.sender] = rewardsLeft;
-
-        mintRequestId += 1;
 
         mintRequests[sequenceNumber] = MintRequest({
             user: msg.sender,

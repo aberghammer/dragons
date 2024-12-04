@@ -5,6 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { DragonsLair } from "../typechain-types";
 import { rarityLevels } from "./rarityLevels";
+import { rollTypes } from "./rolltype";
 
 describe("DragonsLair Admin Tests", async function () {
   async function adminFixture() {
@@ -15,6 +16,7 @@ describe("DragonsLair Admin Tests", async function () {
     await entropy.waitForDeployment();
 
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
+    //@ts-ignore
     const derpyDragons = await DerpyDragons.deploy();
     await derpyDragons.waitForDeployment();
 
@@ -40,6 +42,7 @@ describe("DragonsLair Admin Tests", async function () {
 
     const dragonsLair = dragonsLairUntyped as unknown as DragonsLair;
 
+    await dragonsLair.initializeRollTypes(rollTypes);
     await dragonsLair.initializeRarityLevels(rarityLevels);
 
     return {
@@ -205,6 +208,104 @@ describe("DragonsLair Admin Tests", async function () {
         dragonsLair,
         "OwnableUnauthorizedAccount"
       );
+    });
+  });
+  describe("Initialize RollTypes", async function () {
+    it("should allow the owner to initialize roll types", async function () {
+      const { owner, dragonsLair } = await loadFixture(adminFixture);
+
+      // Call initializeRollTypes as the owner
+      await expect(
+        dragonsLair.connect(owner).initializeRollTypes(rollTypes)
+      ).to.emit(dragonsLair, "RollTypesInitialized");
+
+      // Verify roll types using the getRollTypeById function
+      const rollType0 = await dragonsLair.getRollTypeById(0);
+      expect(rollType0.price).to.equal(1000n);
+      expect(rollType0.probabilities).to.deep.equal([100n, 0, 0, 0, 0, 0]);
+
+      const rollType1 = await dragonsLair.getRollTypeById(1);
+      expect(rollType1.price).to.equal(2000n);
+      expect(rollType1.probabilities).to.deep.equal([60n, 40, 0, 0, 0, 0]);
+    });
+
+    it("should revert if probabilities do not sum to 100", async function () {
+      const { owner, dragonsLair } = await loadFixture(adminFixture);
+
+      const invalidRollTypes = [
+        { price: 1000, probabilities: [50, 50, 10, 0, 0, 0] }, // Sum > 100
+      ];
+
+      await expect(
+        dragonsLair.connect(owner).initializeRollTypes(invalidRollTypes)
+      ).to.be.revertedWithCustomError(dragonsLair, "InvalidProbabilitySum");
+    });
+
+    it("should revert if a non-owner tries to initialize roll types", async function () {
+      const { user1, dragonsLair } = await loadFixture(adminFixture);
+
+      const rollTypes = [{ price: 1000, probabilities: [100, 0, 0, 0, 0, 0] }];
+
+      await expect(
+        dragonsLair.connect(user1).initializeRollTypes(rollTypes)
+      ).to.be.revertedWithCustomError(
+        dragonsLair,
+        "OwnableUnauthorizedAccount"
+      );
+    });
+
+    it("should revert if roles are not initialized", async function () {
+      const { owner } = await loadFixture(adminFixture);
+
+      const DragonsLair = await ethers.getContractFactory("DragonsLair");
+      const dragonsLairUntyped = await upgrades.deployProxy(
+        DragonsLair,
+        [
+          await owner.getAddress(),
+          1000,
+          await owner.getAddress(),
+          await owner.getAddress(),
+        ],
+        { initializer: "initialize" }
+      );
+      await dragonsLairUntyped.waitForDeployment();
+
+      const dragonsLair = dragonsLairUntyped as unknown as DragonsLair;
+
+      await expect(
+        dragonsLair.connect(owner).initializeRarityLevels(rarityLevels)
+      ).to.be.revertedWithCustomError(dragonsLair, "RollsNotInitialized");
+    });
+
+    it("should revert if rarity levels length does not match existing rolls", async function () {
+      const { owner, dragonsLair } = await loadFixture(adminFixture);
+
+      // Simulate initializing rolls
+      await dragonsLair.connect(owner).initializeRollTypes(rollTypes);
+
+      const mockRarityLevels = [
+        { minted: 0, maxSupply: 100n, tokenUri: "ar://common-folder/" }, // Provide fewer rarity levels than expected
+      ];
+
+      await expect(
+        dragonsLair.connect(owner).initializeRarityLevels(mockRarityLevels)
+      ).to.be.revertedWithCustomError(dragonsLair, "ConfigMismatch");
+    });
+
+    it("should initialize rarity levels successfully when conditions are met", async function () {
+      const { owner, dragonsLair } = await loadFixture(adminFixture);
+
+      // Simulate initializing rolls
+      await dragonsLair.connect(owner).initializeRollTypes(rollTypes);
+
+      await expect(
+        dragonsLair.connect(owner).initializeRarityLevels(rarityLevels)
+      ).to.emit(dragonsLair, "RarityLevelsInitialized");
+
+      // Verify initialization
+      const rarityLevel0 = await dragonsLair.rarityLevels(0);
+      expect(rarityLevel0.maxSupply).to.equal(100);
+      expect(rarityLevel0.tokenUri).to.equal("ar://common-folder/");
     });
   });
 });

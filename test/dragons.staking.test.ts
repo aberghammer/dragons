@@ -6,6 +6,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { DragonsLair } from "../typechain-types";
 import { rarityLevels } from "./rarityLevels";
+import { rollTypes } from "./rolltype";
 
 describe("DragonsLair Tests", async function () {
   async function cbcFixture() {
@@ -20,6 +21,7 @@ describe("DragonsLair Tests", async function () {
     await dragons.waitForDeployment();
 
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
+    //@ts-ignore
     const derpyDragons = await DerpyDragons.deploy();
     await derpyDragons.waitForDeployment();
 
@@ -42,6 +44,7 @@ describe("DragonsLair Tests", async function () {
 
     const dragonsLair = dragonsLairUntyped as unknown as DragonsLair;
 
+    await dragonsLair.initializeRollTypes(rollTypes);
     await dragonsLair.initializeRarityLevels(rarityLevels);
 
     // console.log(await dragonsLair.getAddress());
@@ -331,5 +334,19 @@ describe("DragonsLair Tests", async function () {
     // Check with a tolerance of ±1
     const tolerance = 1n;
     expect(owedRewards).to.be.closeTo(expectedRewards, tolerance);
+  });
+
+  it("should prevent users from directly transferring tokens to the contract", async function () {
+    const { user1, dragons, dragonsLair } = await loadFixture(cbcFixture);
+
+    await expect(
+      dragons
+        .connect(user1)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          await dragonsLair.getAddress(),
+          1
+        )
+    ).to.be.revertedWithCustomError(dragonsLair, "DirectTransferNotAllowed");
   });
 });

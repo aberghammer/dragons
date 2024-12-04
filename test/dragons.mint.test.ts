@@ -4,12 +4,14 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { MockEntropy, DragonsLair } from "../typechain-types";
 import { rarityLevels, lowAmountRarityLevels } from "./rarityLevels";
+import { rollTypes } from "./rolltype";
 
 describe("DragonsLair Minting with Entropy", async function () {
   async function mintingFixture() {
     const [owner, user1, user2] = await ethers.getSigners();
 
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
+    //@ts-ignore
     const derpyDragons = await DerpyDragons.deploy();
     await derpyDragons.waitForDeployment();
 
@@ -47,6 +49,7 @@ describe("DragonsLair Minting with Entropy", async function () {
 
     await derpyDragons.setDragonLairAddress(await dragonsLair.getAddress());
 
+    await dragonsLair.initializeRollTypes(rollTypes);
     await dragonsLair.initializeRarityLevels(rarityLevels);
 
     // Set the DragonsLair contract as the caller for the entropy contract
@@ -271,6 +274,10 @@ describe("DragonsLair Minting with Entropy", async function () {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
+      await dragonsLair.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
       // Trigger entropy callback to complete the randomness process
       await entropy.fireCallbackManually(1, 5);
 
@@ -285,10 +292,6 @@ describe("DragonsLair Minting with Entropy", async function () {
         "ar://common-folder/1.json"
       );
 
-      await dragonsLair.connect(user1).mintToken(1, {
-        value: ethers.parseEther("0.01"), // Mock fee
-      });
-
       // Trigger entropy callback to complete the randomness process
       await entropy.fireCallbackManually(2, 5);
 
@@ -297,6 +300,43 @@ describe("DragonsLair Minting with Entropy", async function () {
       const request2 = await dragonsLair.mintRequests(2);
 
       expect(request2.uri).to.equal("ar://uncommon-folder/2.json");
+    });
+
+    it("should not be able to mint if no tokens are left", async function () {
+      const { user1, dragonsLair, dragons, entropy, derpyDragons } =
+        await loadFixture(mintingFixture);
+
+      await dragonsLair.initializeRarityLevels(lowAmountRarityLevels);
+      await dragonsLair.setStakingMode(true);
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await dragonsLair.getAddress(), true);
+      await dragonsLair.connect(user1).stake([4, 5, 6]);
+
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 days
+      await ethers.provider.send("evm_mine", []);
+
+      // Mint token request
+      await dragonsLair.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      await dragonsLair.connect(user1).mintToken(1, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      // Trigger entropy callback to complete the randomness process
+      await entropy.fireCallbackManually(1, 5);
+      await entropy.fireCallbackManually(2, 5);
+
+      // Finalize the minting process
+      await dragonsLair.selectRarityAndMint(1);
+      await dragonsLair.selectRarityAndMint(2);
+
+      await expect(
+        dragonsLair.connect(user1).mintToken(1)
+      ).to.be.revertedWithCustomError(dragonsLair, "NoMintsLeft");
     });
 
     it("should handle refund when no rarity is available", async function () {
@@ -334,7 +374,6 @@ describe("DragonsLair Minting with Entropy", async function () {
       await dragonsLair.connect(user1).mintToken(1, {
         value: ethers.parseEther("0.01"), // Mock fee
       });
-
       const rewardsBefore = await dragonsLair.owedRewards(
         await user1.getAddress()
       );
