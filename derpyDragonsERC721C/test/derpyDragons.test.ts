@@ -181,4 +181,36 @@ describe("ERC721CWithBasicRoyalties", function () {
       expect(supportsUnsupported).to.be.false;
     });
   });
+
+  describe("setTokenURI", function () {
+    it("should allow the owner to update a token's URI", async function () {
+      // Set dragon lair and mint a token
+      await contract.setDragonLairAddress(await dragonLair.getAddress());
+      await contract
+        .connect(dragonLair)
+        .mint(await owner.getAddress(), "ipfs://initial-uri");
+
+      // Verify initial URI
+      expect(await contract.tokenURI(1)).to.equal("ipfs://initial-uri");
+
+      // Owner updates the URI
+      await contract.setTokenURI(1, "ipfs://new-uri");
+      expect(await contract.tokenURI(1)).to.equal("ipfs://new-uri");
+    });
+
+    it("should revert if a non-owner tries to update a token's URI", async function () {
+      // Set dragon lair and mint a token
+      await contract.setDragonLairAddress(await dragonLair.getAddress());
+      await contract
+        .connect(dragonLair)
+        .mint(await owner.getAddress(), "ipfs://initial-uri");
+
+      // Attempt to update the URI from a non-owner account
+      await expect(
+        contract
+          .connect(otherAccount)
+          .setTokenURI(1, "ipfs://attempted-unauthorized-uri")
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+  });
 });
