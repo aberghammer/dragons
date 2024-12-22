@@ -52,6 +52,7 @@ contract DragonsLair is
     error ConfigMismatch();
     error RollsNotInitialized();
     error NoMintsLeft();
+    error CheckinToEarly();
 
     event StakingModeUpdated(bool open);
     event Staked(address indexed user, uint256 tokenId);
@@ -65,6 +66,8 @@ contract DragonsLair is
     event RollTypesInitialized();
     event RarityLevelsInitialized();
     event ProviderUpdated(address provider);
+    event DailyCheckin(address indexed user, uint256 timestamp, uint256 bonus);
+    event DailyBonusUpdated(uint256 bonus);
 
     struct StakedTokens {
         address owner;
@@ -99,9 +102,11 @@ contract DragonsLair is
     uint public pointsPerDayPerToken;
     uint public mintedDragonCount;
     uint public mintRequestId;
+    uint public checkinBonus;
     bool internal stakingInProgress;
     address[] public allStakers;
     IERC721 public dragons;
+    IERC721 public dinnerParty;
     IDerpyDragons public derpyDragons;
     IEntropy public entropy;
     address public provider;
@@ -109,6 +114,7 @@ contract DragonsLair is
     bool public rarityLevelsInitialized;
     uint public existingRolls;
 
+    mapping(address => uint256) public lastCheckinTimestamp;
     mapping(address user => uint256[] stakedTokens) public stakedTokenIds;
     mapping(uint256 tokenId => StakedTokens stakedTokens)
         public stakedTokenProps;
@@ -131,6 +137,7 @@ contract DragonsLair is
         address entropy_,
         uint256 pointsPerHourPerToken_,
         address dragonsAddress_,
+        address dinnerPartyAddress_,
         address derpyDragonsAddress_,
         address provider_
     ) public initializer {
@@ -140,6 +147,7 @@ contract DragonsLair is
         __ERC721Holder_init();
         derpyDragons = IDerpyDragons(derpyDragonsAddress_);
         dragons = IERC721(dragonsAddress_);
+        dinnerParty = IERC721(dinnerPartyAddress_);
         entropy = IEntropy(entropy_);
         provider = provider_;
 
@@ -230,6 +238,17 @@ contract DragonsLair is
     }
 
     /**
+     * @dev Returns a list of token IDs that are staked by a particular address.
+     * @param addr The address to query staked tokens for.
+     * @return An array of token IDs that the address has staked.
+     */
+    function getTokensStaked(
+        address addr
+    ) external view returns (uint256[] memory) {
+        return stakedTokenIds[addr];
+    }
+
+    /**
      * @dev returns te mint requests by user
      * this can be used in fronted to display a history or unfinished requests
      */
@@ -256,6 +275,34 @@ contract DragonsLair is
     ) external view returns (RollType memory) {
         RollType storage rollType = rollTypes[rollTypeId];
         return (rollType);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Daily checkin functions
+    //--------------------------------------------------------------------------------
+
+    /**
+     * @dev Allows a user to check in daily to earn points.
+     * Points are multiplied by  the number of "The Dinner Party" tokens owned.
+     */
+
+    function dailyCheckIn() external nonReentrant {
+        if (!stakingOpen) revert StakingClosed();
+        if (block.timestamp < lastCheckinTimestamp[msg.sender] + 24 hours) {
+            revert CheckinToEarly();
+        }
+
+        uint256 dinnerPartyMultiplier = dinnerParty.balanceOf(msg.sender) + 1;
+        owedRewards[msg.sender] += checkinBonus * dinnerPartyMultiplier;
+
+        lastCheckinTimestamp[msg.sender] = block.timestamp;
+
+        emit DailyCheckin(msg.sender, block.timestamp, checkinBonus);
+    }
+
+    function setDailyBonus(uint256 bonus) external onlyOwner {
+        checkinBonus = bonus;
+        emit DailyBonusUpdated(bonus);
     }
 
     //--------------------------------------------------------------------------------

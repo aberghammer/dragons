@@ -13,7 +13,8 @@ async function main() {
     [
       "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
       10000n,
-      "0x095a8aa22cf86e222fbc0f829ae9d0831d8c52bc", //R`s on ape
+      "0x942f916C60De629C0758542d4b08Fc1356309DFB", //Dragons on ape
+      "0x85206d9edbc0fbc405a60b7345ea6994a5826a70", //DinnerParty
       "0x25402FfD2e63844Bc649e2d551723657cC389FDA",
       "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506", //Provider
     ],

@@ -20,6 +20,10 @@ describe("DragonsLair Tests", async function () {
     const dragons = await Dragons.deploy();
     await dragons.waitForDeployment();
 
+    const DinnerParty = await ethers.getContractFactory("DinnerParty");
+    const dinnerParty = await DinnerParty.deploy();
+    await dinnerParty.waitForDeployment();
+
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
     //@ts-ignore
     const derpyDragons = await DerpyDragons.deploy();
@@ -36,6 +40,7 @@ describe("DragonsLair Tests", async function () {
         await entropy.getAddress(),
         40,
         await dragons.getAddress(),
+        await dinnerParty.getAddress(),
         await derpyDragons.getAddress(),
         "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
       ],
@@ -88,6 +93,9 @@ describe("DragonsLair Tests", async function () {
         );
       }
 
+      expect(
+        await dragonsLair.getTokensStaked(await user1.getAddress())
+      ).to.deep.equal([1n, 2n, 3n]);
       // Verify staking properties
       const stakedProps1 = await dragonsLair.stakedTokenProps(1);
       expect(stakedProps1.owner).to.equal(await user1.getAddress());

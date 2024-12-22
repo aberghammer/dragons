@@ -15,6 +15,10 @@ describe("DragonsLair Admin Tests", async function () {
     const entropy = await MockEntropy.deploy(await owner.getAddress());
     await entropy.waitForDeployment();
 
+    const DinnerParty = await ethers.getContractFactory("DinnerParty");
+    const dinnerParty = await DinnerParty.deploy();
+    await dinnerParty.waitForDeployment();
+
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
     //@ts-ignore
     const derpyDragons = await DerpyDragons.deploy();
@@ -34,6 +38,7 @@ describe("DragonsLair Admin Tests", async function () {
         await entropy.getAddress(),
         1000,
         await dragons.getAddress(),
+        await dinnerParty.getAddress(),
         await derpyDragons.getAddress(),
         "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
       ],
@@ -264,6 +269,7 @@ describe("DragonsLair Admin Tests", async function () {
         [
           await owner.getAddress(),
           1000,
+          await owner.getAddress(),
           await owner.getAddress(),
           await owner.getAddress(),
           "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",

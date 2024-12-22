@@ -52,6 +52,7 @@ contract DragonsLairV2 is
     error ConfigMismatch();
     error RollsNotInitialized();
     error NoMintsLeft();
+    error CheckinToEarly();
 
     event StakingModeUpdated(bool open);
     event Staked(address indexed user, uint256 tokenId);
@@ -64,10 +65,13 @@ contract DragonsLairV2 is
     event TokenReadyForMint(address indexed user, uint64 requestId);
     event RollTypesInitialized();
     event RarityLevelsInitialized();
+    event ProviderUpdated(address provider);
+    event DailyCheckin(address indexed user, uint256 timestamp, uint256 bonus);
+    event DailyBonusUpdated(uint256 bonus);
 
     struct StakedTokens {
-        address owner; // The current owner of the staked token.
-        uint256 checkInTimestamp; // The timestamp of the last check-in.
+        address owner;
+        uint256 checkInTimestamp;
     }
 
     struct MintRequest {
@@ -83,14 +87,14 @@ contract DragonsLairV2 is
     }
 
     struct RarityLevel {
-        uint256 minted; // Bereits gemintete Tokens dieser Rarität
-        uint256 maxSupply; // Maximale Anzahl an Tokens dieser Rarität
-        string tokenUri; // Basis-URI für die Token-JSONs
+        uint256 minted;
+        uint256 maxSupply;
+        string tokenUri;
     }
 
     struct RollType {
-        uint256 price; // Punkte, die benötigt werden
-        uint256[] probabilities; // Wahrscheinlichkeiten für jede Stufe
+        uint256 price;
+        uint256[] probabilities;
     }
 
     bool public stakingOpen;
@@ -98,9 +102,11 @@ contract DragonsLairV2 is
     uint public pointsPerDayPerToken;
     uint public mintedDragonCount;
     uint public mintRequestId;
+    uint public checkinBonus;
     bool internal stakingInProgress;
     address[] public allStakers;
     IERC721 public dragons;
+    IERC721 public dinnerParty;
     IDerpyDragons public derpyDragons;
     IEntropy public entropy;
     address public provider;
@@ -108,6 +114,7 @@ contract DragonsLairV2 is
     bool public rarityLevelsInitialized;
     uint public existingRolls;
 
+    mapping(address => uint256) public lastCheckinTimestamp;
     mapping(address user => uint256[] stakedTokens) public stakedTokenIds;
     mapping(uint256 tokenId => StakedTokens stakedTokens)
         public stakedTokenProps;
@@ -129,17 +136,20 @@ contract DragonsLairV2 is
     function initialize(
         address entropy_,
         uint256 pointsPerHourPerToken_,
-        address dragonsAddress,
-        address derpyDragonsAddress_
+        address dragonsAddress_,
+        address dinnerPartyAddress_,
+        address derpyDragonsAddress_,
+        address provider_
     ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         __ERC721Holder_init();
         derpyDragons = IDerpyDragons(derpyDragonsAddress_);
-        dragons = IERC721(dragonsAddress);
+        dragons = IERC721(dragonsAddress_);
+        dinnerParty = IERC721(dinnerPartyAddress_);
         entropy = IEntropy(entropy_);
-        provider = 0x52DeaA1c84233F7bb8C8A45baeDE41091c616506;
+        provider = provider_;
 
         pointsPerHourPerToken = pointsPerHourPerToken_;
         pointsPerDayPerToken = pointsPerHourPerToken_ * 24;
@@ -147,11 +157,10 @@ contract DragonsLairV2 is
         stakedTokenIds[address(0)].push();
     }
 
-    function setStakingMode(bool open) external onlyOwner {
-        stakingOpen = open;
-        emit StakingModeUpdated(open);
-    }
-
+    /**
+     * @dev Initializes the rarity levels for the contract.
+     * @param _rarityLevels The rarity levels to be initialized.
+     */
     function initializeRarityLevels(
         RarityLevel[] memory _rarityLevels
     ) external onlyOwner {
@@ -168,13 +177,16 @@ contract DragonsLairV2 is
         emit RarityLevelsInitialized();
     }
 
+    /**
+     * @dev Initializes the roll types for the contract.
+     * @param newRollTypes The roll types to be initialized.
+     */
     function initializeRollTypes(
         RollType[] memory newRollTypes
     ) external onlyOwner {
         for (uint8 i = 0; i < newRollTypes.length; i++) {
             uint256 totalProbability = 0;
 
-            // Validierung der Wahrscheinlichkeiten
             for (uint8 j = 0; j < newRollTypes[i].probabilities.length; j++) {
                 totalProbability += newRollTypes[i].probabilities[j];
             }
@@ -183,7 +195,6 @@ contract DragonsLairV2 is
                 revert InvalidProbabilitySum();
             }
 
-            // Roll-Typ initialisieren
             rollTypes[i] = newRollTypes[i];
         }
         rolesInitialized = true;
@@ -191,32 +202,112 @@ contract DragonsLairV2 is
         emit RollTypesInitialized();
     }
 
-    function getEntropy() internal view override returns (address) {
-        return address(entropy); // Return the stored entropy contract address
+    /**
+     * @dev Allows the owner to update the staking mode.
+     * @param open The new staking mode.
+     */
+    function setStakingMode(bool open) external onlyOwner {
+        stakingOpen = open;
+        emit StakingModeUpdated(open);
     }
 
-    function getmintRequestsByUser(
-        address user
-    ) external view returns (uint256[] memory) {
-        return mintRequestsByUser[user];
+    /**
+     * @dev Allows the owner to update the provider address.
+     * @param provider_ The new provider address.
+     */
+    function setProvider(address provider_) external onlyOwner {
+        provider = provider_;
+        emit ProviderUpdated(provider_);
     }
 
+    /**
+     * @dev Allows the owner to update the points.
+     * @param pointsPerDay The new points required.
+     */
     function setPointsPerDayPerToken(uint256 pointsPerDay) external onlyOwner {
         pointsPerHourPerToken = pointsPerDay / 24;
         pointsPerDayPerToken = pointsPerDay;
         emit PointsPerDayPerTokenUpdated(pointsPerDay);
     }
 
+    /**
+     * @dev gets the entropy provider address
+     */
+    function getEntropy() internal view override returns (address) {
+        return address(entropy); // Return the stored entropy contract address
+    }
+
+    /**
+     * @dev Returns a list of token IDs that are staked by a particular address.
+     * @param addr The address to query staked tokens for.
+     * @return An array of token IDs that the address has staked.
+     */
+    function getTokensStaked(
+        address addr
+    ) external view returns (uint256[] memory) {
+        return stakedTokenIds[addr];
+    }
+
+    /**
+     * @dev returns te mint requests by user
+     * this can be used in fronted to display a history or unfinished requests
+     */
+    function getmintRequestsByUser(
+        address user
+    ) external view returns (uint256[] memory) {
+        return mintRequestsByUser[user];
+    }
+
+    /**
+     * @dev returns all the stakers of the contract
+     * this can be used in fronted to display a leaderboard
+     */
     function getAllStakers() external view returns (address[] memory) {
         return allStakers;
     }
 
+    /**
+     * @dev helper functon for getting the rollType configuration
+     * @param rollTypeId The ID of the roll type to be retrieved.
+     */
     function getRollTypeById(
         uint8 rollTypeId
     ) external view returns (RollType memory) {
         RollType storage rollType = rollTypes[rollTypeId];
         return (rollType);
     }
+
+    //--------------------------------------------------------------------------------
+    // Daily checkin functions
+    //--------------------------------------------------------------------------------
+
+    /**
+     * @dev Allows a user to check in daily to earn points.
+     * Points are multiplied by  the number of "The Dinner Party" tokens owned.
+     */
+
+    function dailyCheckIn() external nonReentrant {
+        if (!stakingOpen) revert StakingClosed();
+        if (block.timestamp < lastCheckinTimestamp[msg.sender] + 24 hours) {
+            revert CheckinToEarly();
+        }
+
+        uint256 dinnerPartyMultiplier = dinnerParty.balanceOf(msg.sender) + 1;
+        owedRewards[msg.sender] += checkinBonus * dinnerPartyMultiplier;
+
+        lastCheckinTimestamp[msg.sender] = block.timestamp;
+
+        emit DailyCheckin(msg.sender, block.timestamp, checkinBonus);
+    }
+
+    function setDailyBonus(uint256 bonus) external onlyOwner {
+        checkinBonus = bonus;
+        emit DailyBonusUpdated(bonus);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Staking functions
+    //--------------------------------------------------------------------------------
 
     /**
      * @dev Allows a user to stake one or more tokens by transferring them to the contract.
@@ -261,225 +352,6 @@ contract DragonsLairV2 is
         emit Staked(msg.sender, tokenId);
     }
 
-    function entropyCallback(
-        uint64 sequenceNumber,
-        address,
-        bytes32 randomNumber
-    ) internal override {
-        MintRequest storage request = mintRequests[sequenceNumber];
-
-        if (request.requestCompleted) {
-            revert RequestAlreadyCompleted(sequenceNumber);
-        }
-
-        if (request.cancelled) {
-            revert RequestAlreadyCancelled(sequenceNumber);
-        }
-        // Zufallszahl speichern
-        request.randomNumber = uint256(randomNumber);
-        request.requestCompleted = true;
-
-        emit TokenReadyForMint(request.user, sequenceNumber);
-    }
-
-    function resolveExpiredMint(uint64 sequenceNumber) external {
-        MintRequest storage request = mintRequests[sequenceNumber];
-
-        if (request.requestCompleted) {
-            revert MintAlreadyCompleted(sequenceNumber);
-        }
-
-        if (request.cancelled) {
-            revert MintRequestAlreadyCancelled(sequenceNumber);
-        }
-
-        if (block.timestamp <= request.timestamp + 1 days) {
-            revert MintRequestNotYetExpired(
-                sequenceNumber,
-                (request.timestamp + 1 days) - block.timestamp
-            );
-        }
-
-        uint256 pointsRequired = rollTypes[request.rollType].price;
-        // Punkte zurückerstatten
-        owedRewards[request.user] += pointsRequired;
-
-        // Anfrage als abgebrochen markieren
-        request.cancelled = true;
-
-        emit MintFailed(request.user, sequenceNumber);
-    }
-
-    function selectRarityAndMint(uint64 sequenceNumber) external {
-        MintRequest storage request = mintRequests[sequenceNumber];
-
-        if (!request.requestCompleted) {
-            revert RequestNotCompleted(sequenceNumber);
-        }
-
-        if (request.mintFinalized) {
-            revert MintAlreadyCompleted(sequenceNumber);
-        }
-
-        uint8[] memory availableRarities = new uint8[](existingRolls);
-        uint256 randomValue = request.randomNumber % 100; // Zufallswert zwischen 0 und 99
-        uint8 finalRarityIndex = 0; // Platzhalter für die endgültige Rarität
-        uint256 cumulativeProbability = 0; // Kumulative Wahrscheinlichkeit
-        uint256 usedRandomness = 0; // Zähler für die Anzahl der verwendeten Zufallszahlen
-        uint256 availableCount = 0; // Zähler für verfügbare Raritäten
-
-        // Prüfe verfügbare Raritäten
-        for (uint8 i = 0; i < existingRolls; i++) {
-            // wenn die Rarität noch nicht ausverkauft ist
-            if (rarityLevels[i].minted < rarityLevels[i].maxSupply) {
-                availableRarities[availableCount] = i; // Speichere die verfügbare Rarität
-                availableCount++;
-            }
-        }
-
-        // Kombinierte Schleife: Verteile Wahrscheinlichkeiten und prüfe Verfügbarkeit
-        for (uint8 attempt = 0; attempt < availableCount; attempt++) {
-            // Generiere Zufallszahl beim ersten Versuch oder bei Fallback
-            uint256 effectiveRandomValue = (attempt == 0)
-                ? randomValue
-                : uint256(
-                    keccak256(abi.encode(request.randomNumber, usedRandomness))
-                ) % 100;
-
-            for (uint8 j = 0; j < availableCount; j++) {
-                uint8 rarityIndex = availableRarities[j];
-                uint256 probability = rollTypes[request.rollType].probabilities[
-                    rarityIndex
-                ];
-
-                cumulativeProbability += probability;
-
-                if (effectiveRandomValue < cumulativeProbability) {
-                    finalRarityIndex = rarityIndex;
-                    break;
-                }
-            }
-
-            // Prüfe Verfügbarkeit der gewählten Rarität
-            if (
-                rarityLevels[finalRarityIndex].minted <
-                rarityLevels[finalRarityIndex].maxSupply
-            ) {
-                break; // Gültige Rarität gefunden
-            }
-
-            // Fallback: Zufällige neue Rarität generieren
-            cumulativeProbability = 0; // Reset für nächste Iteration
-            usedRandomness++;
-            finalRarityIndex = 0; // Reset, falls keine Rarität gefunden
-        }
-
-        // Falls keine verfügbare Rarität gefunden wurde (extrem unwahrscheinlich)
-        if (
-            rarityLevels[finalRarityIndex].minted >=
-            rarityLevels[finalRarityIndex].maxSupply
-        ) {
-            owedRewards[request.user] += rollTypes[request.rollType].price;
-            request.cancelled = true; // Markiere den Request als abgebrochen
-            emit MintFailed(request.user, sequenceNumber);
-            return;
-        }
-
-        // Mint-Logik, wenn Rarität verfügbar ist
-        rarityLevels[finalRarityIndex].minted += 1;
-        mintedDragonCount += 1;
-
-        request.tokenId = mintedDragonCount;
-
-        // URI für den geminteten Token erstellen
-        string memory fullUri = string(
-            abi.encodePacked(
-                rarityLevels[finalRarityIndex].tokenUri,
-                Strings.toString(mintedDragonCount),
-                ".json"
-            )
-        );
-
-        mintRequests[sequenceNumber].uri = fullUri;
-        mintRequests[sequenceNumber].mintFinalized = true;
-
-        // NFT minten
-        derpyDragons.mint(request.user, fullUri);
-
-        emit TokenMinted(request.user, mintedDragonCount);
-    }
-
-    function mintToken(uint8 rollType) external payable nonReentrant {
-        if (rollType > existingRolls) revert InvalidRollType();
-
-        RollType storage selectedRollType = rollTypes[rollType];
-        bool hasMintCapacity = false;
-
-        // Überprüfe die Mint-Kapazität für alle relevanten Wahrscheinlichkeiten
-        for (uint8 i = 0; i < selectedRollType.probabilities.length; i++) {
-            // Überspringe Wahrscheinlichkeiten von 0
-            if (selectedRollType.probabilities[i] == 0) {
-                continue;
-            }
-
-            // Prüfe, ob Mint-Kapazität vorhanden ist
-            if (rarityLevels[i].minted < rarityLevels[i].maxSupply) {
-                hasMintCapacity = true;
-                break; // Mint-Kapazität gefunden, keine weitere Prüfung erforderlich
-            }
-        }
-
-        // Wenn keine Mint-Kapazität gefunden wurde, breche ab
-        if (!hasMintCapacity) {
-            revert NoMintsLeft();
-        }
-
-        uint256 pointsRequired = rollTypes[rollType].price;
-
-        (
-            uint256 totalClaimable,
-            uint256[] memory tokenIdsToReset
-        ) = _calculatePendingRewards(msg.sender);
-
-        _resetCurrentStakedRewards(tokenIdsToReset);
-
-        uint256 allRewards = totalClaimable + owedRewards[msg.sender];
-        if (allRewards < pointsRequired) {
-            revert InsufficientBalance(allRewards, pointsRequired);
-        }
-
-        uint fee = entropy.getFee(provider);
-        if (msg.value < fee) {
-            revert InsufficientFee(msg.value, fee);
-        }
-
-        uint256 rewardsLeft = allRewards - pointsRequired;
-        owedRewards[msg.sender] = rewardsLeft;
-        mintRequestId += 1;
-
-        uint64 sequenceNumber = entropy.requestWithCallback{value: fee}(
-            provider,
-            keccak256(abi.encodePacked(block.timestamp, msg.sender))
-        );
-
-        mintRequests[sequenceNumber] = MintRequest({
-            user: msg.sender,
-            tokenId: 0,
-            randomNumber: 0,
-            timestamp: block.timestamp,
-            uri: "",
-            rollType: rollType,
-            requestCompleted: false,
-            cancelled: false,
-            mintFinalized: false
-        });
-
-        requestIdToMintId[sequenceNumber] = mintRequestId;
-        mintRequestsByUser[msg.sender].push(sequenceNumber);
-
-        emit MintRequested(msg.sender, sequenceNumber);
-    }
-
     /**
      * @dev Allows a user to unstake one or more tokens, transferring them back from the contract.
      * If the contract doesn't have enough TOKEN, the rewards are stored.
@@ -504,6 +376,11 @@ contract DragonsLairV2 is
         }
     }
 
+    /**
+     * @dev Internal function to handle the logic of unstaking a single token.
+     * Checks if the token is staked by the user and transfers the token back to the user.
+     * @param tokenId The ID of the token to be unstaked.
+     */
     function _unstake(uint256 tokenId) internal {
         address owner = stakedTokenProps[tokenId].owner;
         if (owner != msg.sender) revert NotStakedOwner();
@@ -588,16 +465,249 @@ contract DragonsLairV2 is
         }
     }
 
+    //--------------------------------------------------------------------------------
+    // Minting functions
+    //--------------------------------------------------------------------------------
+
+    /**
+     * @dev Allows a user to request a token mint.
+     * The user must have enough points to request the token.
+     * @param rollType The type of roll to be requested.
+     */
+    function requestToken(uint8 rollType) external payable nonReentrant {
+        if (rollType >= existingRolls) revert InvalidRollType();
+
+        RollType storage selectedRollType = rollTypes[rollType];
+        bool hasMintCapacity = false;
+
+        for (uint8 i = 0; i < selectedRollType.probabilities.length; i++) {
+            if (selectedRollType.probabilities[i] == 0) {
+                continue;
+            }
+
+            if (rarityLevels[i].minted < rarityLevels[i].maxSupply) {
+                hasMintCapacity = true;
+                break;
+            }
+        }
+
+        if (!hasMintCapacity) {
+            revert NoMintsLeft();
+        }
+
+        uint256 pointsRequired = rollTypes[rollType].price;
+
+        (
+            uint256 totalClaimable,
+            uint256[] memory tokenIdsToReset
+        ) = _calculatePendingRewards(msg.sender);
+
+        _resetCurrentStakedRewards(tokenIdsToReset);
+
+        uint256 allRewards = totalClaimable + owedRewards[msg.sender];
+        if (allRewards < pointsRequired) {
+            revert InsufficientBalance(allRewards, pointsRequired);
+        }
+
+        uint fee = entropy.getFee(provider);
+        if (msg.value < fee) {
+            revert InsufficientFee(msg.value, fee);
+        }
+
+        uint256 rewardsLeft = allRewards - pointsRequired;
+        owedRewards[msg.sender] = rewardsLeft;
+        mintRequestId += 1;
+
+        uint64 sequenceNumber = entropy.requestWithCallback{value: fee}(
+            provider,
+            keccak256(abi.encodePacked(block.timestamp, msg.sender))
+        );
+
+        mintRequests[sequenceNumber] = MintRequest({
+            user: msg.sender,
+            tokenId: 0,
+            randomNumber: 0,
+            timestamp: block.timestamp,
+            uri: "",
+            rollType: rollType,
+            requestCompleted: false,
+            cancelled: false,
+            mintFinalized: false
+        });
+
+        requestIdToMintId[sequenceNumber] = mintRequestId;
+        mintRequestsByUser[msg.sender].push(sequenceNumber);
+
+        emit MintRequested(msg.sender, sequenceNumber);
+    }
+
+    /**
+     * @dev callback function leveraged by pyth giving the entropy
+     * @param sequenceNumber The sequence number of the request.
+     * @param randomNumber The random number generated by the entropy provider.
+     */
+    function entropyCallback(
+        uint64 sequenceNumber,
+        address,
+        bytes32 randomNumber
+    ) internal override {
+        MintRequest storage request = mintRequests[sequenceNumber];
+
+        if (request.requestCompleted) {
+            revert RequestAlreadyCompleted(sequenceNumber);
+        }
+
+        if (request.cancelled) {
+            revert RequestAlreadyCancelled(sequenceNumber);
+        }
+
+        request.randomNumber = uint256(randomNumber);
+        request.requestCompleted = true;
+
+        emit TokenReadyForMint(request.user, sequenceNumber);
+    }
+
+    /**
+     * @dev Allows a user to cancel a mint request if it has not been completed by the provider.
+     * @param sequenceNumber The sequence number of the mint request to be cancelled.
+     */
+    function resolveExpiredMint(uint64 sequenceNumber) external {
+        MintRequest storage request = mintRequests[sequenceNumber];
+
+        if (request.requestCompleted) {
+            revert MintAlreadyCompleted(sequenceNumber);
+        }
+
+        if (request.cancelled) {
+            revert MintRequestAlreadyCancelled(sequenceNumber);
+        }
+
+        if (block.timestamp <= request.timestamp + 1 days) {
+            revert MintRequestNotYetExpired(
+                sequenceNumber,
+                (request.timestamp + 1 days) - block.timestamp
+            );
+        }
+
+        uint256 pointsRequired = rollTypes[request.rollType].price;
+        owedRewards[request.user] += pointsRequired;
+
+        request.cancelled = true;
+
+        emit MintFailed(request.user, sequenceNumber);
+    }
+
+    /**
+     * @dev Allows the provider to mint the token based on a calculated rarity.
+     * @param sequenceNumber The sequence number of the mint request to be completed.
+     */
+    function selectRarityAndMint(uint64 sequenceNumber) external {
+        MintRequest storage request = mintRequests[sequenceNumber];
+
+        if (!request.requestCompleted) {
+            revert RequestNotCompleted(sequenceNumber);
+        }
+
+        if (request.mintFinalized) {
+            revert MintAlreadyCompleted(sequenceNumber);
+        }
+
+        uint8[] memory availableRarities = new uint8[](existingRolls);
+        uint256 randomValue = request.randomNumber % 100;
+        uint8 finalRarityIndex = 0;
+        uint256 cumulativeProbability = 0;
+        uint256 usedRandomness = 0;
+        uint256 availableCount = 0;
+
+        for (uint8 i = 0; i < existingRolls; i++) {
+            if (rarityLevels[i].minted < rarityLevels[i].maxSupply) {
+                availableRarities[availableCount] = i;
+                availableCount++;
+            }
+        }
+
+        for (uint8 attempt = 0; attempt < availableCount; attempt++) {
+            uint256 effectiveRandomValue = (attempt == 0)
+                ? randomValue
+                : uint256(
+                    keccak256(abi.encode(request.randomNumber, usedRandomness))
+                ) % 100;
+
+            for (uint8 j = 0; j < availableCount; j++) {
+                uint8 rarityIndex = availableRarities[j];
+                uint256 probability = rollTypes[request.rollType].probabilities[
+                    rarityIndex
+                ];
+
+                cumulativeProbability += probability;
+
+                if (effectiveRandomValue < cumulativeProbability) {
+                    finalRarityIndex = rarityIndex;
+                    break;
+                }
+            }
+
+            if (
+                rarityLevels[finalRarityIndex].minted <
+                rarityLevels[finalRarityIndex].maxSupply
+            ) {
+                break;
+            }
+
+            cumulativeProbability = 0;
+            usedRandomness++;
+            finalRarityIndex = 0;
+        }
+
+        if (
+            rarityLevels[finalRarityIndex].minted >=
+            rarityLevels[finalRarityIndex].maxSupply
+        ) {
+            owedRewards[request.user] += rollTypes[request.rollType].price;
+            request.cancelled = true;
+            emit MintFailed(request.user, sequenceNumber);
+            return;
+        }
+
+        rarityLevels[finalRarityIndex].minted += 1;
+        mintedDragonCount += 1;
+
+        request.tokenId = mintedDragonCount;
+
+        string memory fullUri = string(
+            abi.encodePacked(
+                rarityLevels[finalRarityIndex].tokenUri,
+                Strings.toString(mintedDragonCount),
+                ".json"
+            )
+        );
+
+        mintRequests[sequenceNumber].uri = fullUri;
+        mintRequests[sequenceNumber].mintFinalized = true;
+
+        derpyDragons.mint(request.user, fullUri);
+
+        emit TokenMinted(request.user, mintedDragonCount);
+    }
+
     // -------------------------------------------------------
     // Utility functions
     // ------------------------------------------------------
 
+    /**
+     * @dev Adds a token ID to the staked token array for a user.
+     * @param tokenId The ID of the token to be added.
+     */
     function add(uint256 tokenId) internal {
         uint256[] storage tokenIds = stakedTokenIds[msg.sender];
         tokenIndexInArray[tokenId] = tokenIds.length;
         tokenIds.push(tokenId);
     }
 
+    /**
+     * @dev Removes a token ID from the staked token array for a user.
+     * @param tokenId The ID of the token to be removed.
+     */
     function remove(uint256 tokenId) internal {
         uint256[] storage tokenIds = stakedTokenIds[msg.sender];
         uint256 index = tokenIndexInArray[tokenId];
@@ -614,6 +724,9 @@ contract DragonsLairV2 is
         delete tokenIndexInArray[tokenId];
     }
 
+    /**
+     * @dev prevent direct transfers of tokens to the contract
+     */
     function onERC721Received(
         address,
         address,
@@ -624,10 +737,16 @@ contract DragonsLairV2 is
         return this.onERC721Received.selector;
     }
 
+    /**
+     * @dev upgrading the contract
+     */
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
 
+    /**
+     * @dev returns the version of the contract
+     */
     function version() public pure returns (string memory) {
         return "2.0";
     }

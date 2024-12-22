@@ -19,6 +19,10 @@ describe("DragonsLair Minting with Entropy", async function () {
     const dragons = await Dragons.deploy();
     await dragons.waitForDeployment();
 
+    const DinnerParty = await ethers.getContractFactory("DinnerParty");
+    const dinnerParty = await DinnerParty.deploy();
+    await dinnerParty.waitForDeployment();
+
     await dragons.mint(await user1.getAddress(), 10);
     await dragons.mint(await user2.getAddress(), 10);
 
@@ -39,6 +43,7 @@ describe("DragonsLair Minting with Entropy", async function () {
         await entropy.getAddress(),
         40,
         await dragons.getAddress(),
+        await dinnerParty.getAddress(),
         await derpyDragons.getAddress(),
         "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506",
       ],
