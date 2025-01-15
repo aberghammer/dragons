@@ -346,5 +346,54 @@ describe("DragonsLair Admin Tests", async function () {
         "OwnableUnauthorizedAccount"
       );
     });
+
+    it("should revert if a non-owner tries to set the dinner party discount", async function () {
+      const { user1, dragonsLair } = await loadFixture(adminFixture);
+
+      // Nicht-Owner versucht den Dinner Party Rabatt zu setzen
+      await expect(
+        dragonsLair.connect(user1).setDinnerPartyDiscount(10)
+      ).to.be.revertedWithCustomError(
+        dragonsLair,
+        "OwnableUnauthorizedAccount"
+      );
+    });
+
+    it("should revert if a non-owner tries to set the dinner party daily bonus", async function () {
+      const { user1, dragonsLair } = await loadFixture(adminFixture);
+
+      // Nicht-Owner versucht den Dinner Party Daily Bonus zu setzen
+      await expect(
+        dragonsLair.connect(user1).setDinnerPartyDailyBonus(10)
+      ).to.be.revertedWithCustomError(
+        dragonsLair,
+        "OwnableUnauthorizedAccount"
+      );
+    });
+
+    it("should allow the owner to set the dwaganz contract", async function () {
+      const { owner, dragonsLair, user1 } = await loadFixture(adminFixture);
+
+      const newDwaganzContract = user1.getAddress();
+
+      // Owner setzt den Dwaganz Contract
+      await expect(
+        dragonsLair.connect(owner).setDwaganzContract(newDwaganzContract)
+      )
+        .to.emit(dragonsLair, "DwaganzContractUpdated") // Falls es ein Event gibt, kannst du es hier prüfen
+        .withArgs(newDwaganzContract);
+    });
+
+    it("should revert if a non-owner tries to set the dwaganz contract", async function () {
+      const { user1, dragonsLair } = await loadFixture(adminFixture);
+
+      // Nicht-Owner versucht den Dwaganz Contract zu setzen
+      await expect(
+        dragonsLair.connect(user1).setDwaganzContract(await user1.getAddress())
+      ).to.be.revertedWithCustomError(
+        dragonsLair,
+        "OwnableUnauthorizedAccount"
+      );
+    });
   });
 });

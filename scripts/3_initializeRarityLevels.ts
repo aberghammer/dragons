@@ -1,20 +1,24 @@
 import { ethers } from "hardhat";
 import { config as dotEnvConfig } from "dotenv";
-import { rarityLevels } from "../test/rarityLevels";
+import { liveRarityLevels } from "./rarityLevels";
+
 dotEnvConfig();
 
 async function main() {
   // Contract deployment address (replace with your deployed contract's address)
-  const derpyDragonsAddress = "0xcEfD3FabE761b87D3629a6649753bb911F7C49bb"; // Example address
+
+  const dragonsLair = "0xFc4F9A76F5456888Fa13B41Eb4e0bcE26F6B1e9d"; // Example address / Derpy Dragons Address
 
   // Get the contract factory and attach to the deployed address
-  const DerpyDragons = await ethers.getContractFactory("DragonsLair");
-  const derpyDragonsContract = DerpyDragons.attach(derpyDragonsAddress);
+  const DragonsLair = await ethers.getContractFactory("DragonsLair");
+  const dragonsLairContract = DragonsLair.attach(dragonsLair);
 
   // Call setStakingMode with the desired mode
   console.log(`Setting rarity levels`);
+
+  console.log(liveRarityLevels);
   //@ts-ignore
-  const tx = await derpyDragonsContract.initializeRarityLevels(rarityLevels);
+  const tx = await dragonsLairContract.initializeRarityLevels(liveRarityLevels);
 
   // Wait for the transaction to be mined
   await tx.wait();
@@ -25,6 +29,6 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("Error setting staking mode:", error);
+    console.error("Error setting rarity levels:", error);
     process.exit(1);
   });

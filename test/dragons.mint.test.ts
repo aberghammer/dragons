@@ -8,7 +8,7 @@ import { rollTypes } from "./rolltype";
 
 describe("DragonsLair Minting with Entropy", async function () {
   async function mintingFixture() {
-    const [owner, user1, user2] = await ethers.getSigners();
+    const [owner, user1, user2, user3] = await ethers.getSigners();
 
     const DerpyDragons = await ethers.getContractFactory("DerpyDragons");
     //@ts-ignore
@@ -25,6 +25,9 @@ describe("DragonsLair Minting with Entropy", async function () {
 
     await dragons.mint(await user1.getAddress(), 10);
     await dragons.mint(await user2.getAddress(), 10);
+
+    await dragons.mint(await user3.getAddress(), 10);
+    await dinnerParty.mint(await user3.getAddress(), 10);
 
     const MockEntropy = await ethers.getContractFactory("MockEntropy");
     const entropy = await MockEntropy.deploy(await owner.getAddress());
@@ -55,6 +58,9 @@ describe("DragonsLair Minting with Entropy", async function () {
 
     await derpyDragons.setDragonLairAddress(await dragonsLair.getAddress());
 
+    await dragonsLair.setDinnerPartyDiscount(24);
+    await dragonsLair.setDinnerPartyDailyBonus(48);
+
     await dragonsLair.initializeRollTypes(rollTypes);
     await dragonsLair.initializeRarityLevels(rarityLevels);
 
@@ -65,7 +71,9 @@ describe("DragonsLair Minting with Entropy", async function () {
       owner,
       user1,
       user2,
+      user3,
       dragonsLair,
+      dinnerParty,
       dragons,
       entropy,
       wrongEntropy,
@@ -149,6 +157,219 @@ describe("DragonsLair Minting with Entropy", async function () {
       // console.log("Minted token event:", await dragonsLair.mintRequests(1));
 
       expect(await derpyDragons.balanceOf(await user1.getAddress())).to.equal(
+        1
+      );
+    });
+
+    it("should allow user3 to mint with discount", async function () {
+      const {
+        user3,
+        dragonsLair,
+        dragons,
+        entropy,
+        derpyDragons,
+        dinnerParty,
+      } = await loadFixture(mintingFixture);
+
+      // Set the discount and ensure user3 has DinnerParty tokens
+      // Im mintingFixture wird user3 bereits mit 10 DinnerParty-Token gemintet
+      expect(await dinnerParty.balanceOf(await user3.getAddress())).to.equal(
+        10
+      );
+
+      // Enable staking mode and stake some Dragons tokens if required by the contract
+      await dragonsLair.setStakingMode(true);
+      await dragons
+        .connect(user3)
+        .setApprovalForAll(await dragonsLair.getAddress(), true);
+
+      const stakedTokenIds = [21, 22, 23, 24, 25];
+      await dragonsLair.connect(user3).stake(stakedTokenIds);
+
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 365 days
+      await ethers.provider.send("evm_mine", []);
+
+      await dinnerParty.connect(user3).mint(await user3.getAddress(), 75);
+
+      // Berechne den erwarteten Rabatt
+      const dinnerPartyBalance = await dinnerParty.balanceOf(
+        await user3.getAddress()
+      );
+
+      const discount = dinnerPartyBalance * 24n; // dinnerPartyDiscount ist 24
+      const rollType = 1; // Beispiel-RollType
+      const rollPrice = rollTypes[rollType].price;
+
+      console.log("Roll price:", rollPrice);
+      console.log("Discount:", discount);
+
+      const expectedPointsRequired =
+        rollPrice > discount ? BigInt(rollPrice) - discount : 0;
+
+      console.log("Expected points required:", expectedPointsRequired);
+
+      // Prüfe die Anfangsbelohnungen
+      const initialRewards = await dragonsLair.pendingRewards(
+        await user3.getAddress()
+      );
+
+      console.log("Initial rewards:", initialRewards);
+
+      // Initiere die Mint-Anfrage mit dem Rabatt
+      const tx = await dragonsLair.connect(user3).requestToken(rollType, {
+        value: ethers.parseEther("0.01"), // Mock-Gebühr
+      });
+
+      // Set up a filter for the MintRequested event and query it
+      const filter = dragonsLair.filters.MintRequested();
+
+      // console.log("Filter:", filter);
+
+      // console.log("Block hash:", receipt.hash);
+
+      const events = await dragonsLair.queryFilter(filter);
+
+      // Verify the MintRequested event was emitted with the correct values
+      const event = events[0];
+
+      const sequenceNumber = event.args![1];
+
+      expect(event.args!.user).to.equal(await user3.getAddress());
+      expect(sequenceNumber).to.be.a("bigInt");
+
+      // Manually trigger the entropy callback
+      await entropy.fireCallbackManually(sequenceNumber, 12);
+
+      // Prüfe, ob die Punkteanforderungen korrekt abgezogen wurden
+      const rewardsAfterRequest = await dragonsLair.owedRewards(
+        await user3.getAddress()
+      );
+      expect(rewardsAfterRequest).to.equal(initialRewards);
+
+      // Finalisiere den Mint-Prozess
+      await dragonsLair.selectRarityAndMint(sequenceNumber);
+
+      // Überprüfe, ob der Token an user3 gemintet wurde
+      const mintedTokenId = 1; // Annahme: TokenId 1 wird gemintet
+      expect(await derpyDragons.ownerOf(mintedTokenId)).to.equal(
+        await user3.getAddress()
+      );
+      expect(await dragonsLair.mintedDragonCount()).to.equal(1);
+
+      // Überprüfe das TokenURI, falls relevant
+      const mintRequest = await dragonsLair.mintRequests(sequenceNumber);
+      expect(mintRequest.user).to.equal(await user3.getAddress());
+      expect(mintRequest.uri).to.not.equal(""); // Überprüfe, ob ein URI gesetzt wurde
+
+      // Überprüfe das Balance von user3 nach dem Mint
+      expect(await derpyDragons.balanceOf(await user3.getAddress())).to.equal(
+        1
+      );
+    });
+
+    it("should allow user3 to mint with discount", async function () {
+      const {
+        user3,
+        dragonsLair,
+        dragons,
+        entropy,
+        derpyDragons,
+        dinnerParty,
+      } = await loadFixture(mintingFixture);
+
+      // Set the discount and ensure user3 has DinnerParty tokens
+      // Im mintingFixture wird user3 bereits mit 10 DinnerParty-Token gemintet
+      expect(await dinnerParty.balanceOf(await user3.getAddress())).to.equal(
+        10
+      );
+
+      // Enable staking mode and stake some Dragons tokens if required by the contract
+      await dragonsLair.setStakingMode(true);
+      await dragons
+        .connect(user3)
+        .setApprovalForAll(await dragonsLair.getAddress(), true);
+
+      const stakedTokenIds = [21, 22, 23, 24, 25];
+      await dragonsLair.connect(user3).stake(stakedTokenIds);
+
+      // Advance time to accumulate rewards
+      await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 10]); // 10 Tage
+      await ethers.provider.send("evm_mine", []);
+
+      // Berechne den erwarteten Rabatt
+      const dinnerPartyBalance = await dinnerParty.balanceOf(
+        await user3.getAddress()
+      );
+      const discount = dinnerPartyBalance * 24n; // dinnerPartyDiscount ist 24
+      const rollType = 1; // Beispiel-RollType
+      const rollPrice = rollTypes[rollType].price;
+
+      console.log("Roll price:", rollPrice);
+      console.log("Discount:", discount);
+
+      const expectedPointsRequired =
+        rollPrice > discount ? BigInt(rollPrice) - discount : 0;
+
+      console.log("Expected points required:", expectedPointsRequired);
+
+      // Prüfe die Anfangsbelohnungen
+      const initialRewards = await dragonsLair.pendingRewards(
+        await user3.getAddress()
+      );
+
+      console.log("Initial rewards:", initialRewards);
+
+      // Initiere die Mint-Anfrage mit dem Rabatt
+      const tx = await dragonsLair.connect(user3).requestToken(rollType, {
+        value: ethers.parseEther("0.01"), // Mock-Gebühr
+      });
+
+      // Set up a filter for the MintRequested event and query it
+      const filter = dragonsLair.filters.MintRequested();
+
+      // console.log("Filter:", filter);
+
+      // console.log("Block hash:", receipt.hash);
+
+      const events = await dragonsLair.queryFilter(filter);
+
+      // Verify the MintRequested event was emitted with the correct values
+      const event = events[0];
+
+      const sequenceNumber = event.args![1];
+
+      expect(event.args!.user).to.equal(await user3.getAddress());
+      expect(sequenceNumber).to.be.a("bigInt");
+
+      // Manually trigger the entropy callback
+      await entropy.fireCallbackManually(sequenceNumber, 12);
+
+      // Prüfe, ob die Punkteanforderungen korrekt abgezogen wurden
+      const rewardsAfterRequest = await dragonsLair.owedRewards(
+        await user3.getAddress()
+      );
+      expect(rewardsAfterRequest).to.equal(
+        initialRewards - BigInt(expectedPointsRequired)
+      );
+
+      // Finalisiere den Mint-Prozess
+      await dragonsLair.selectRarityAndMint(sequenceNumber);
+
+      // Überprüfe, ob der Token an user3 gemintet wurde
+      const mintedTokenId = 1; // Annahme: TokenId 1 wird gemintet
+      expect(await derpyDragons.ownerOf(mintedTokenId)).to.equal(
+        await user3.getAddress()
+      );
+      expect(await dragonsLair.mintedDragonCount()).to.equal(1);
+
+      // Überprüfe das TokenURI, falls relevant
+      const mintRequest = await dragonsLair.mintRequests(sequenceNumber);
+      expect(mintRequest.user).to.equal(await user3.getAddress());
+      expect(mintRequest.uri).to.not.equal(""); // Überprüfe, ob ein URI gesetzt wurde
+
+      // Überprüfe das Balance von user3 nach dem Mint
+      expect(await derpyDragons.balanceOf(await user3.getAddress())).to.equal(
         1
       );
     });
@@ -305,7 +526,7 @@ describe("DragonsLair Minting with Entropy", async function () {
 
       const request2 = await dragonsLair.mintRequests(2);
 
-      expect(request2.uri).to.equal("ar://uncommon-folder/2.json");
+      expect(request2.uri).to.equal("ar://uncommon-folder/1.json");
     });
 
     it("should not be able to mint if no tokens are left", async function () {
@@ -399,7 +620,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       await dragonsLair.selectRarityAndMint(2);
 
       const request2 = await dragonsLair.mintRequests(2);
-      expect(request2.uri).to.equal("ar://uncommon-folder/2.json");
+      expect(request2.uri).to.equal("ar://uncommon-folder/1.json");
 
       expect(rewardsAfter).to.equal(rewardsBefore - 2000n); // Refund should match the rollType price
 
@@ -426,7 +647,7 @@ describe("DragonsLair Minting with Entropy", async function () {
       expect(owedRewards).to.equal(rewardsBefore); // Refund should match the rollType price
 
       expect(
-        await dragonsLair.getmintRequestsByUser(await user1.getAddress())
+        await dragonsLair.getMintRequestsByUser(await user1.getAddress())
       ).to.deep.equal([1, 2, 3]);
     });
 

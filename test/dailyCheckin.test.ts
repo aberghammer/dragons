@@ -55,6 +55,8 @@ describe("DragonsLair Tests", async function () {
     await dragonsLair.initializeRollTypes(rollTypes);
     await dragonsLair.initializeRarityLevels(rarityLevels);
     await dragonsLair.setDailyBonus(40);
+    await dragonsLair.setDinnerPartyDailyBonus(48);
+    await dragonsLair.setDinnerPartyDiscount(24);
 
     await dragonsLair.setStakingMode(true);
 
@@ -83,7 +85,7 @@ describe("DragonsLair Tests", async function () {
         await user1.getAddress()
       );
 
-      expect(owedRewards).to.equal(440); // Assuming checkinBonus is 40 * (10 tokens + 1)
+      expect(owedRewards).to.equal(520); // Assuming checkinBonus is 40 + (10 tokens * 48)
       expect(lastCheckin).to.be.closeTo(Math.floor(Date.now() / 1000), 20); // Timestamp should be close to now.
     });
 
@@ -107,7 +109,7 @@ describe("DragonsLair Tests", async function () {
       const owedRewards = await dragonsLair.owedRewards(
         await user1.getAddress()
       );
-      expect(owedRewards).to.equal(40 * 13); // 40 * (12 + 1)
+      expect(owedRewards).to.equal(40 + 12 * 48); // 40 + (12 * 48)
     });
 
     it("should give a minimum bonus to users with zero DinnerParty tokens", async function () {

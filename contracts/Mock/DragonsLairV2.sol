@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IEntropyConsumer} from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 
-interface IDerpyDragons {
+interface IDwaganz {
     /// @notice Mints a new token to the specified address with the given token URI.
     /// @param to The address to receive the newly minted token.
     /// @param tokenUri The metadata URI for the minted token.
@@ -68,6 +68,9 @@ contract DragonsLairV2 is
     event ProviderUpdated(address provider);
     event DailyCheckin(address indexed user, uint256 timestamp, uint256 bonus);
     event DailyBonusUpdated(uint256 bonus);
+    event DwaganzContractUpdated(address dwaganzAddress);
+    event DinnerPartyDiscountUpdated(uint256 discount);
+    event DinnerPartyDailyBonusUpdated(uint256 bonus);
 
     struct StakedTokens {
         address owner;
@@ -98,21 +101,26 @@ contract DragonsLairV2 is
     }
 
     bool public stakingOpen;
+    bool public rolesInitialized;
+    bool public rarityLevelsInitialized;
+    bool internal stakingInProgress;
+
     uint public pointsPerHourPerToken;
     uint public pointsPerDayPerToken;
     uint public mintedDragonCount;
     uint public mintRequestId;
     uint public checkinBonus;
-    bool internal stakingInProgress;
+    uint public dinnerPartyDiscount;
+    uint public existingRolls;
+    uint public dinnerPartyDailyBonus;
+
     address[] public allStakers;
+    address public provider;
+
     IERC721 public dragons;
     IERC721 public dinnerParty;
-    IDerpyDragons public derpyDragons;
+    IDwaganz public dwaganz;
     IEntropy public entropy;
-    address public provider;
-    bool public rolesInitialized;
-    bool public rarityLevelsInitialized;
-    uint public existingRolls;
 
     mapping(address => uint256) public lastCheckinTimestamp;
     mapping(address user => uint256[] stakedTokens) public stakedTokenIds;
@@ -138,14 +146,14 @@ contract DragonsLairV2 is
         uint256 pointsPerHourPerToken_,
         address dragonsAddress_,
         address dinnerPartyAddress_,
-        address derpyDragonsAddress_,
+        address dwaganzAddress_,
         address provider_
     ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         __ERC721Holder_init();
-        derpyDragons = IDerpyDragons(derpyDragonsAddress_);
+        dwaganz = IDwaganz(dwaganzAddress_);
         dragons = IERC721(dragonsAddress_);
         dinnerParty = IERC721(dinnerPartyAddress_);
         entropy = IEntropy(entropy_);
@@ -221,13 +229,48 @@ contract DragonsLairV2 is
     }
 
     /**
-     * @dev Allows the owner to update the points.
+     * @dev Allows the owner to update the points per day.
      * @param pointsPerDay The new points required.
      */
     function setPointsPerDayPerToken(uint256 pointsPerDay) external onlyOwner {
         pointsPerHourPerToken = pointsPerDay / 24;
         pointsPerDayPerToken = pointsPerDay;
         emit PointsPerDayPerTokenUpdated(pointsPerDay);
+    }
+
+    /**
+     * @dev Allows the owner to update the daily bonus.
+     * @param bonus The new daily bonus.
+     */
+    function setDailyBonus(uint256 bonus) external onlyOwner {
+        checkinBonus = bonus;
+        emit DailyBonusUpdated(bonus);
+    }
+
+    /**
+     * @dev Allows the owner to update the discount.
+     * @param discount The new points required.
+     */
+    function setDinnerPartyDiscount(uint discount) external onlyOwner {
+        dinnerPartyDiscount = discount;
+        emit DinnerPartyDiscountUpdated(discount);
+    }
+
+    /**
+     * @dev Allows the owner to update the daily bonus.
+     * @param bonus The new daily bonus.
+     */
+    function setDinnerPartyDailyBonus(uint bonus) external onlyOwner {
+        dinnerPartyDailyBonus = bonus;
+        emit DinnerPartyDailyBonusUpdated(bonus);
+    }
+
+    /**
+     * @dev Allows the owner to update the minting contract.
+     */
+    function setDwaganzContract(address dwaganzAddress) external onlyOwner {
+        dwaganz = IDwaganz(dwaganzAddress);
+        emit DwaganzContractUpdated(dwaganzAddress);
     }
 
     /**
@@ -252,7 +295,7 @@ contract DragonsLairV2 is
      * @dev returns te mint requests by user
      * this can be used in fronted to display a history or unfinished requests
      */
-    function getmintRequestsByUser(
+    function getMintRequestsByUser(
         address user
     ) external view returns (uint256[] memory) {
         return mintRequestsByUser[user];
@@ -283,7 +326,7 @@ contract DragonsLairV2 is
 
     /**
      * @dev Allows a user to check in daily to earn points.
-     * Points are multiplied by  the number of "The Dinner Party" tokens owned.
+     * Points increased based on the number of "The Dinner Party" tokens owned.
      */
 
     function dailyCheckIn() external nonReentrant {
@@ -292,17 +335,15 @@ contract DragonsLairV2 is
             revert CheckinToEarly();
         }
 
-        uint256 dinnerPartyMultiplier = dinnerParty.balanceOf(msg.sender) + 1;
-        owedRewards[msg.sender] += checkinBonus * dinnerPartyMultiplier;
+        uint256 dinnerPartyMultiplier = dinnerParty.balanceOf(msg.sender);
+        owedRewards[msg.sender] +=
+            checkinBonus +
+            dinnerPartyMultiplier *
+            dinnerPartyDailyBonus;
 
         lastCheckinTimestamp[msg.sender] = block.timestamp;
 
         emit DailyCheckin(msg.sender, block.timestamp, checkinBonus);
-    }
-
-    function setDailyBonus(uint256 bonus) external onlyOwner {
-        checkinBonus = bonus;
-        emit DailyBonusUpdated(bonus);
     }
 
     //--------------------------------------------------------------------------------
@@ -495,7 +536,15 @@ contract DragonsLairV2 is
             revert NoMintsLeft();
         }
 
+        uint discount = dinnerParty.balanceOf(msg.sender) * dinnerPartyDiscount;
+
         uint256 pointsRequired = rollTypes[rollType].price;
+
+        if (discount > pointsRequired) {
+            pointsRequired = 0;
+        } else {
+            pointsRequired -= discount;
+        }
 
         (
             uint256 totalClaimable,
@@ -619,6 +668,7 @@ contract DragonsLairV2 is
         uint256 usedRandomness = 0;
         uint256 availableCount = 0;
 
+        // Find the available rarities for the roll type example: [0,2,3] is still mintable.
         for (uint8 i = 0; i < existingRolls; i++) {
             if (rarityLevels[i].minted < rarityLevels[i].maxSupply) {
                 availableRarities[availableCount] = i;
@@ -669,7 +719,7 @@ contract DragonsLairV2 is
             return;
         }
 
-        rarityLevels[finalRarityIndex].minted += 1;
+        uint dragonNumberPerFolder = rarityLevels[finalRarityIndex].minted += 1;
         mintedDragonCount += 1;
 
         request.tokenId = mintedDragonCount;
@@ -677,7 +727,7 @@ contract DragonsLairV2 is
         string memory fullUri = string(
             abi.encodePacked(
                 rarityLevels[finalRarityIndex].tokenUri,
-                Strings.toString(mintedDragonCount),
+                Strings.toString(dragonNumberPerFolder),
                 ".json"
             )
         );
@@ -685,7 +735,7 @@ contract DragonsLairV2 is
         mintRequests[sequenceNumber].uri = fullUri;
         mintRequests[sequenceNumber].mintFinalized = true;
 
-        derpyDragons.mint(request.user, fullUri);
+        dwaganz.mint(request.user, fullUri);
 
         emit TokenMinted(request.user, mintedDragonCount);
     }
