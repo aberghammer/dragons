@@ -6,12 +6,12 @@ import "@limitbreak/creator-token-contracts/contracts/programmable-royalties/Bas
 import "@limitbreak/creator-token-contracts/contracts/access/OwnableBasic.sol";
 
 /**
- * @title Dwaganz
+ * @title Dwaginz
  * @author
  * @notice This contract extends ERC721C to include basic royalty functionality using BasicRoyalties.
  *         It relies on an external "DragonLair" contract to manage minting of tokens.
  */
-contract Dwaganz is OwnableBasic, ERC721C, BasicRoyalties {
+contract Dwaginz is OwnableBasic, ERC721C, BasicRoyalties {
     /// @notice Address of the dragon lair contract that controls minting.
     address public dragonLairAddress;
 

@@ -5,16 +5,16 @@ import { blue, green, red, bold } from "colorette";
 dotEnvConfig();
 
 async function main() {
-  console.log(blue("🚀 Deploying Dwaganz Contract..."));
+  console.log(blue("🚀 Deploying Dwaginz Contract..."));
 
   // Get the deployer's address
   const [deployer] = await ethers.getSigners();
   const deployerAddress = await deployer.getAddress();
   console.log(`🧑‍💻 Deployer Address: ${deployerAddress}`);
 
-  // Deploy the Dwaganz contract
-  const Dwaganz = await ethers.getContractFactory("Dwaganz");
-  const dwaganz = await Dwaganz.deploy(
+  // Deploy the Dwaginz contract
+  const Dwaginz = await ethers.getContractFactory("Dwaginz");
+  const dwaginz = await Dwaginz.deploy(
     deployerAddress, // Royalty Receiver
     500, // Royalty fee numerator (5%)
     "Testi Testo", // Token name
@@ -22,19 +22,19 @@ async function main() {
   );
 
   // Wait for deployment
-  await dwaganz.waitForDeployment();
+  await dwaginz.waitForDeployment();
 
   console.log(
     green(
-      `Dwaganz Contract deployed at Address: ${bold(
-        await dwaganz.getAddress()
+      `Dwaginz Contract deployed at Address: ${bold(
+        await dwaginz.getAddress()
       )}`
     )
   );
 }
 
 main().catch((error) => {
-  console.error(red("❌ Error deploying Dwaganz:"), error);
+  console.error(red("❌ Error deploying Dwaginz:"), error);
   process.exitCode = 1;
 });
 

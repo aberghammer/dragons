@@ -67,6 +67,8 @@ describe("DragonsLair Minting with Entropy", async function () {
     // Set the DragonsLair contract as the caller for the entropy contract
     await entropy.setCallerContract(await dragonsLair.getAddress());
 
+    await dragonsLair.setMintingMode(true);
+
     return {
       owner,
       user1,
@@ -372,6 +374,18 @@ describe("DragonsLair Minting with Entropy", async function () {
       expect(await derpyDragons.balanceOf(await user3.getAddress())).to.equal(
         1
       );
+    });
+
+    it("should revert if minting mode is disabled", async function () {
+      const { user1, dragonsLair } = await loadFixture(mintingFixture);
+
+      await dragonsLair.setMintingMode(false);
+
+      await expect(
+        dragonsLair.connect(user1).requestToken(1, {
+          value: ethers.parseEther("0.01"),
+        })
+      ).to.be.revertedWithCustomError(dragonsLair, "MintingClosed");
     });
 
     it("should revert if mint request is not completed", async function () {

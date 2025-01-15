@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IEntropyConsumer} from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 
-interface IDwaganz {
+interface IDwaginz {
     /// @notice Mints a new token to the specified address with the given token URI.
     /// @param to The address to receive the newly minted token.
     /// @param tokenUri The metadata URI for the minted token.
@@ -53,6 +53,7 @@ contract DragonsLairV2 is
     error RollsNotInitialized();
     error NoMintsLeft();
     error CheckinToEarly();
+    error MintingClosed();
 
     event StakingModeUpdated(bool open);
     event Staked(address indexed user, uint256 tokenId);
@@ -68,9 +69,10 @@ contract DragonsLairV2 is
     event ProviderUpdated(address provider);
     event DailyCheckin(address indexed user, uint256 timestamp, uint256 bonus);
     event DailyBonusUpdated(uint256 bonus);
-    event DwaganzContractUpdated(address dwaganzAddress);
+    event DwaginzContractUpdated(address dwaginzAddress);
     event DinnerPartyDiscountUpdated(uint256 discount);
     event DinnerPartyDailyBonusUpdated(uint256 bonus);
+    event MintingModeUpdated(bool open);
 
     struct StakedTokens {
         address owner;
@@ -101,6 +103,7 @@ contract DragonsLairV2 is
     }
 
     bool public stakingOpen;
+    bool public mintingOpen;
     bool public rolesInitialized;
     bool public rarityLevelsInitialized;
     bool internal stakingInProgress;
@@ -119,7 +122,7 @@ contract DragonsLairV2 is
 
     IERC721 public dragons;
     IERC721 public dinnerParty;
-    IDwaganz public dwaganz;
+    IDwaginz public dwaginz;
     IEntropy public entropy;
 
     mapping(address => uint256) public lastCheckinTimestamp;
@@ -146,14 +149,14 @@ contract DragonsLairV2 is
         uint256 pointsPerHourPerToken_,
         address dragonsAddress_,
         address dinnerPartyAddress_,
-        address dwaganzAddress_,
+        address dwaginzAddress_,
         address provider_
     ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         __ERC721Holder_init();
-        dwaganz = IDwaganz(dwaganzAddress_);
+        dwaginz = IDwaginz(dwaginzAddress_);
         dragons = IERC721(dragonsAddress_);
         dinnerParty = IERC721(dinnerPartyAddress_);
         entropy = IEntropy(entropy_);
@@ -220,6 +223,15 @@ contract DragonsLairV2 is
     }
 
     /**
+     * @dev Allows the owner to update the minting mode.
+     * @param open The new minting mode.
+     */
+    function setMintingMode(bool open) external onlyOwner {
+        mintingOpen = open;
+        emit MintingModeUpdated(open);
+    }
+
+    /**
      * @dev Allows the owner to update the provider address.
      * @param provider_ The new provider address.
      */
@@ -268,9 +280,9 @@ contract DragonsLairV2 is
     /**
      * @dev Allows the owner to update the minting contract.
      */
-    function setDwaganzContract(address dwaganzAddress) external onlyOwner {
-        dwaganz = IDwaganz(dwaganzAddress);
-        emit DwaganzContractUpdated(dwaganzAddress);
+    function setDwaginzContract(address dwaginzAddress) external onlyOwner {
+        dwaginz = IDwaginz(dwaginzAddress);
+        emit DwaginzContractUpdated(dwaginzAddress);
     }
 
     /**
@@ -517,6 +529,7 @@ contract DragonsLairV2 is
      */
     function requestToken(uint8 rollType) external payable nonReentrant {
         if (rollType >= existingRolls) revert InvalidRollType();
+        if (!mintingOpen) revert MintingClosed();
 
         RollType storage selectedRollType = rollTypes[rollType];
         bool hasMintCapacity = false;
@@ -735,7 +748,7 @@ contract DragonsLairV2 is
         mintRequests[sequenceNumber].uri = fullUri;
         mintRequests[sequenceNumber].mintFinalized = true;
 
-        dwaganz.mint(request.user, fullUri);
+        dwaginz.mint(request.user, fullUri);
 
         emit TokenMinted(request.user, mintedDragonCount);
     }

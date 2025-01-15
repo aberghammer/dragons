@@ -1,10 +1,10 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Contract, Signer } from "ethers";
-import { Dwaganz } from "../typechain-types";
+import { Dwaginz } from "../typechain-types";
 
 describe("ERC721CWithBasicRoyalties", function () {
-  let contract: Dwaganz;
+  let contract: Dwaginz;
   let owner: Signer;
   let otherAccount: Signer;
   let dragonLair: Signer;
@@ -12,13 +12,13 @@ describe("ERC721CWithBasicRoyalties", function () {
   async function deployFixture() {
     [owner, otherAccount, dragonLair] = await ethers.getSigners();
 
-    const Dwaganz = await ethers.getContractFactory("Dwaganz");
-    contract = (await Dwaganz.deploy(
+    const Dwaginz = await ethers.getContractFactory("Dwaginz");
+    contract = (await Dwaginz.deploy(
       await owner.getAddress(), // Royalty Receiver
       500, // 5% Royalty Fee Numerator (500 / 10000)
-      "Dwaganz",
+      "Dwaginz",
       "DD"
-    )) as Dwaganz;
+    )) as Dwaginz;
 
     await contract.waitForDeployment();
   }
@@ -30,7 +30,7 @@ describe("ERC721CWithBasicRoyalties", function () {
   describe("Deployment", function () {
     it("should deploy with correct parameters", async function () {
       expect(await contract.owner()).to.equal(await owner.getAddress());
-      expect(await contract.name()).to.equal("Dwaganz");
+      expect(await contract.name()).to.equal("Dwaginz");
       expect(await contract.symbol()).to.equal("DD");
     });
   });

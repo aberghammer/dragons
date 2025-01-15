@@ -148,6 +148,31 @@ describe("DragonsLair Admin Tests", async function () {
       );
     });
 
+    it("should allow the owner to set the minting mode", async function () {
+      const { owner, dragonsLair } = await loadFixture(adminFixture);
+
+      // Enable minting
+      await expect(dragonsLair.connect(owner).setMintingMode(true))
+        .to.emit(dragonsLair, "MintingModeUpdated")
+        .withArgs(true);
+
+      // Disable minting
+      await expect(dragonsLair.connect(owner).setMintingMode(false))
+        .to.emit(dragonsLair, "MintingModeUpdated")
+        .withArgs(false);
+    });
+
+    it("should revert if a non-owner tries to set minting mode", async function () {
+      const { user1, dragonsLair } = await loadFixture(adminFixture);
+
+      await expect(
+        dragonsLair.connect(user1).setMintingMode(true)
+      ).to.be.revertedWithCustomError(
+        dragonsLair,
+        "OwnableUnauthorizedAccount"
+      );
+    });
+
     it("should revert if a non-owner tries to set rarity intialization", async function () {
       const { user1, dragonsLair } = await loadFixture(adminFixture);
 
@@ -371,25 +396,25 @@ describe("DragonsLair Admin Tests", async function () {
       );
     });
 
-    it("should allow the owner to set the dwaganz contract", async function () {
+    it("should allow the owner to set the dwaginz contract", async function () {
       const { owner, dragonsLair, user1 } = await loadFixture(adminFixture);
 
-      const newDwaganzContract = user1.getAddress();
+      const newDwaginzContract = user1.getAddress();
 
-      // Owner setzt den Dwaganz Contract
+      // Owner setzt den Dwaginz Contract
       await expect(
-        dragonsLair.connect(owner).setDwaganzContract(newDwaganzContract)
+        dragonsLair.connect(owner).setDwaginzContract(newDwaginzContract)
       )
-        .to.emit(dragonsLair, "DwaganzContractUpdated") // Falls es ein Event gibt, kannst du es hier prüfen
-        .withArgs(newDwaganzContract);
+        .to.emit(dragonsLair, "DwaginzContractUpdated") // Falls es ein Event gibt, kannst du es hier prüfen
+        .withArgs(newDwaginzContract);
     });
 
-    it("should revert if a non-owner tries to set the dwaganz contract", async function () {
+    it("should revert if a non-owner tries to set the dwaginz contract", async function () {
       const { user1, dragonsLair } = await loadFixture(adminFixture);
 
-      // Nicht-Owner versucht den Dwaganz Contract zu setzen
+      // Nicht-Owner versucht den Dwaginz Contract zu setzen
       await expect(
-        dragonsLair.connect(user1).setDwaganzContract(await user1.getAddress())
+        dragonsLair.connect(user1).setDwaginzContract(await user1.getAddress())
       ).to.be.revertedWithCustomError(
         dragonsLair,
         "OwnableUnauthorizedAccount"

@@ -15,7 +15,7 @@ async function main() {
       10000n,
       "0x942f916C60De629C0758542d4b08Fc1356309DFB", //Dragons on ape
       "0x85206d9edbc0fbc405a60b7345ea6994a5826a70", //DinnerParty
-      "0x0Fd350B269A30a3c38fe1E2F81eF417a02B00Ec8", //Dwaganz - deploy first...
+      "0x4C32e6f9A7EfDdd183F47b999b82f3877E120601", //Dwaginz - deploy first...
       "0x52DeaA1c84233F7bb8C8A45baeDE41091c616506", //Provider
     ],
     {
