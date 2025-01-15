@@ -14,21 +14,36 @@ async function main() {
   const dragonsLairContract = DragonsLair.attach(dragonsLair);
 
   // Call setStakingMode with the desired mode
-  console.log(`Setting rarity levels`);
 
-  console.log(liveRarityLevels);
   //@ts-ignore
-  const tx = await dragonsLairContract.initializeRarityLevels(liveRarityLevels);
+  const tx_checkin = await dragonsLairContract.setDailyBonus(48);
 
   // Wait for the transaction to be mined
-  await tx.wait();
+  await tx_checkin.wait();
 
-  console.log(`Set rarity levels.`);
+  console.log(`Set daily bonus.`);
+
+  // set dinner party discount
+
+  const tx_dinner_party = await dragonsLairContract.setDinnerPartyDiscount(
+    1440
+  );
+
+  await tx_dinner_party.wait();
+
+  console.log(`Set dinner party discount.`);
+
+  const tx_set_dinner_party_daily_bonus =
+    await dragonsLairContract.setDinnerPartyDailyBonus(48);
+
+  await tx_set_dinner_party_daily_bonus.wait();
+
+  console.log(`Set dinner party daily bonus.`);
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("Error setting rarity levels:", error);
+    console.error("Error setting bonus:", error);
     process.exit(1);
   });
