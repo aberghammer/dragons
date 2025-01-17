@@ -261,7 +261,7 @@ contract DragonsLair is
 
     /**
      * @dev Allows the owner to update the discount.
-     * @param discount The new points required.
+     * @param discount The discount in percent (required).
      */
     function setDinnerPartyDiscount(uint discount) external onlyOwner {
         dinnerPartyDiscount = discount;
@@ -549,15 +549,21 @@ contract DragonsLair is
             revert NoMintsLeft();
         }
 
-        uint discount = dinnerParty.balanceOf(msg.sender) * dinnerPartyDiscount;
+        uint256 discountPercentage = 0;
+
+        if (dinnerPartyDiscount > 0) {
+            discountPercentage =
+                (dinnerParty.balanceOf(msg.sender) * 100) /
+                dinnerPartyDiscount;
+        }
 
         uint256 pointsRequired = rollTypes[rollType].price;
 
-        if (discount > pointsRequired) {
-            pointsRequired = 0;
-        } else {
-            pointsRequired -= discount;
+        if (discountPercentage > 50) {
+            discountPercentage = 50; // max 50% discount
         }
+
+        pointsRequired = (pointsRequired * (100 - discountPercentage)) / 100;
 
         (
             uint256 totalClaimable,
