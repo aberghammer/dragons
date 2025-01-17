@@ -4,11 +4,11 @@ import "@openzeppelin/hardhat-upgrades";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 import { expect } from "chai";
-import { DragonsLair } from "../typechain-types";
+import { DragonForge } from "../typechain-types";
 import { rarityLevels } from "./rarityLevels";
 import { rollTypes } from "./rolltype";
 
-describe("DragonsLair Tests", async function () {
+describe("DragonForge Tests", async function () {
   async function cbcFixture() {
     const [owner, user1, user2, user3] = await ethers.getSigners();
 
@@ -35,9 +35,9 @@ describe("DragonsLair Tests", async function () {
     await dragons.mint(await user2.getAddress(), 10);
     await dragons.mint(await user3.getAddress(), 10);
 
-    const DragonsLair = await ethers.getContractFactory("DragonsLair");
-    const dragonsLairUntyped = await upgrades.deployProxy(
-      DragonsLair,
+    const DragonForge = await ethers.getContractFactory("DragonForge");
+    const dragonForgeUntyped = await upgrades.deployProxy(
+      DragonForge,
       [
         await entropy.getAddress(),
         40,
@@ -48,25 +48,25 @@ describe("DragonsLair Tests", async function () {
       ],
       { initializer: "initialize" }
     );
-    await dragonsLairUntyped.waitForDeployment();
+    await dragonForgeUntyped.waitForDeployment();
 
-    const dragonsLair = dragonsLairUntyped as unknown as DragonsLair;
+    const dragonForge = dragonForgeUntyped as unknown as DragonForge;
 
-    await dragonsLair.initializeRollTypes(rollTypes);
-    await dragonsLair.initializeRarityLevels(rarityLevels);
-    await dragonsLair.setDailyBonus(40);
-    await dragonsLair.setDinnerPartyDailyBonus(48);
-    await dragonsLair.setDinnerPartyDiscount(24);
+    await dragonForge.initializeRollTypes(rollTypes);
+    await dragonForge.initializeRarityLevels(rarityLevels);
+    await dragonForge.setDailyBonus(40);
+    await dragonForge.setDinnerPartyDailyBonus(48);
+    await dragonForge.setDinnerPartyDiscount(24);
 
-    await dragonsLair.setStakingMode(true);
+    await dragonForge.setStakingMode(true);
 
-    // console.log(await dragonsLair.getAddress());
+    // console.log(await dragonForge.getAddress());
     return {
       owner,
       user1,
       user2,
       user3,
-      dragonsLair,
+      dragonForge,
       dragons,
       dinnerParty,
     };
@@ -74,14 +74,14 @@ describe("DragonsLair Tests", async function () {
 
   describe("Checkin Tests", function () {
     it("should allow a user to check in and update rewards", async function () {
-      const { user1, dragonsLair } = await loadFixture(cbcFixture);
+      const { user1, dragonForge } = await loadFixture(cbcFixture);
 
-      await dragonsLair.connect(user1).dailyCheckIn();
+      await dragonForge.connect(user1).dailyCheckIn();
 
-      const owedRewards = await dragonsLair.owedRewards(
+      const owedRewards = await dragonForge.owedRewards(
         await user1.getAddress()
       );
-      const lastCheckin = await dragonsLair.lastCheckinTimestamp(
+      const lastCheckin = await dragonForge.lastCheckinTimestamp(
         await user1.getAddress()
       );
 
@@ -90,74 +90,74 @@ describe("DragonsLair Tests", async function () {
     });
 
     it("should prevent a user from checking in twice within 24 hours", async function () {
-      const { user1, dragonsLair } = await loadFixture(cbcFixture);
+      const { user1, dragonForge } = await loadFixture(cbcFixture);
 
-      await dragonsLair.connect(user1).dailyCheckIn();
+      await dragonForge.connect(user1).dailyCheckIn();
 
       await expect(
-        dragonsLair.connect(user1).dailyCheckIn()
-      ).to.be.revertedWithCustomError(dragonsLair, "CheckinToEarly");
+        dragonForge.connect(user1).dailyCheckIn()
+      ).to.be.revertedWithCustomError(dragonForge, "CheckinToEarly");
     });
 
     it("should correctly apply the multiplier for 'DinnerParty' tokens", async function () {
-      const { user1, dragonsLair, dinnerParty } = await loadFixture(cbcFixture);
+      const { user1, dragonForge, dinnerParty } = await loadFixture(cbcFixture);
 
       await dinnerParty.mint(await user1.getAddress(), 2); // Mint 2 DinnerParty tokens.
 
-      await dragonsLair.connect(user1).dailyCheckIn();
+      await dragonForge.connect(user1).dailyCheckIn();
 
-      const owedRewards = await dragonsLair.owedRewards(
+      const owedRewards = await dragonForge.owedRewards(
         await user1.getAddress()
       );
       expect(owedRewards).to.equal(40 + 12 * 48); // 40 + (12 * 48)
     });
 
     it("should give a minimum bonus to users with zero DinnerParty tokens", async function () {
-      const { user2, dragonsLair } = await loadFixture(cbcFixture);
+      const { user2, dragonForge } = await loadFixture(cbcFixture);
 
-      await dragonsLair.connect(user2).dailyCheckIn();
+      await dragonForge.connect(user2).dailyCheckIn();
 
-      const owedRewards = await dragonsLair.owedRewards(
+      const owedRewards = await dragonForge.owedRewards(
         await user2.getAddress()
       );
       expect(owedRewards).to.equal(40); // Minimum bonus.
     });
 
     it("should prevent check-in when staking is closed", async function () {
-      const { user1, dragonsLair } = await loadFixture(cbcFixture);
+      const { user1, dragonForge } = await loadFixture(cbcFixture);
 
-      await dragonsLair.setStakingMode(false);
+      await dragonForge.setStakingMode(false);
 
       await expect(
-        dragonsLair.connect(user1).dailyCheckIn()
-      ).to.be.revertedWithCustomError(dragonsLair, "StakingClosed");
+        dragonForge.connect(user1).dailyCheckIn()
+      ).to.be.revertedWithCustomError(dragonForge, "StakingClosed");
     });
 
     it("should allow the owner to update the daily bonus", async function () {
-      const { owner, dragonsLair } = await loadFixture(cbcFixture);
+      const { owner, dragonForge } = await loadFixture(cbcFixture);
 
-      await dragonsLair.connect(owner).setDailyBonus(100);
+      await dragonForge.connect(owner).setDailyBonus(100);
 
-      const bonus = await dragonsLair.checkinBonus();
+      const bonus = await dragonForge.checkinBonus();
       expect(bonus).to.equal(100);
     });
 
     it("should prevent non-owners from updating the daily bonus", async function () {
-      const { user1, dragonsLair } = await loadFixture(cbcFixture);
+      const { user1, dragonForge } = await loadFixture(cbcFixture);
 
       await expect(
-        dragonsLair.connect(user1).setDailyBonus(100)
+        dragonForge.connect(user1).setDailyBonus(100)
       ).to.be.revertedWithCustomError(
-        dragonsLair,
+        dragonForge,
         "OwnableUnauthorizedAccount"
       );
     });
 
     it("should emit the correct event on daily check-in", async function () {
-      const { user2, dragonsLair } = await loadFixture(cbcFixture);
+      const { user2, dragonForge } = await loadFixture(cbcFixture);
 
-      await expect(dragonsLair.connect(user2).dailyCheckIn()).to.emit(
-        dragonsLair,
+      await expect(dragonForge.connect(user2).dailyCheckIn()).to.emit(
+        dragonForge,
         "DailyCheckin"
       );
     });

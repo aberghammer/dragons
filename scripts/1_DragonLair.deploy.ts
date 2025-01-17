@@ -5,9 +5,9 @@ import { blue, green, yellow, red, bold } from "colorette";
 dotEnvConfig();
 
 async function main() {
-  console.log(blue("🚀 Deploying DragonsLair Contract..."));
+  console.log(blue("🚀 Deploying DragonForge Contract..."));
 
-  const DerpyDragons = await ethers.getContractFactory("DragonsLair");
+  const DerpyDragons = await ethers.getContractFactory("DragonForge");
   const derpyDragons = await upgrades.deployProxy(
     DerpyDragons,
     [

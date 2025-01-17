@@ -7,16 +7,16 @@ dotEnvConfig();
 async function main() {
   // Contract deployment address (replace with your deployed contract's address)
 
-  const dragonsLair = "0xe59BED48c7B71178A7f43e7d25AaAD99fdA17b76"; // Example address / Derpy Dragons Address
+  const dragonForge = "0xe59BED48c7B71178A7f43e7d25AaAD99fdA17b76"; // Example address / Derpy Dragons Address
 
   // Get the contract factory and attach to the deployed address
-  const DragonsLair = await ethers.getContractFactory("DragonsLair");
-  const dragonsLairContract = DragonsLair.attach(dragonsLair);
+  const DragonForge = await ethers.getContractFactory("DragonForge");
+  const dragonForgeContract = DragonForge.attach(dragonForge);
 
   // Call setStakingMode with the desired mode
 
   //@ts-ignore
-  const tx_checkin = await dragonsLairContract.setStakingMode(true);
+  const tx_checkin = await dragonForgeContract.setStakingMode(true);
 
   // Wait for the transaction to be mined
   await tx_checkin.wait();

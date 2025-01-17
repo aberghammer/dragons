@@ -1283,168 +1283,168 @@
             "offset": 0,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:88"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:88"
           },
           {
             "label": "pointsPerHourPerToken",
             "offset": 0,
             "slot": "1",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:89"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:89"
           },
           {
             "label": "pointsPerDayPerToken",
             "offset": 0,
             "slot": "2",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:90"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:90"
           },
           {
             "label": "mintedDragonCount",
             "offset": 0,
             "slot": "3",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:91"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:91"
           },
           {
             "label": "mintRequestId",
             "offset": 0,
             "slot": "4",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:92"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:92"
           },
           {
             "label": "stakingInProgress",
             "offset": 0,
             "slot": "5",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:93"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:93"
           },
           {
             "label": "allStakers",
             "offset": 0,
             "slot": "6",
             "type": "t_array(t_address)dyn_storage",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:94"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:94"
           },
           {
             "label": "dragons",
             "offset": 0,
             "slot": "7",
             "type": "t_contract(IERC721)4146",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:95"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:95"
           },
           {
             "label": "derpyDragons",
             "offset": 0,
             "slot": "8",
             "type": "t_contract(IDerpyDragons)9505",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:96"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:96"
           },
           {
             "label": "entropy",
             "offset": 0,
             "slot": "9",
             "type": "t_contract(IEntropy)9321",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:97"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:97"
           },
           {
             "label": "provider",
             "offset": 0,
             "slot": "10",
             "type": "t_address",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:98"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:98"
           },
           {
             "label": "stakedTokenIds",
             "offset": 0,
             "slot": "11",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:100"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:100"
           },
           {
             "label": "stakedTokenProps",
             "offset": 0,
             "slot": "12",
             "type": "t_mapping(t_uint256,t_struct(StakedTokens)9638_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:101"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:101"
           },
           {
             "label": "hasStaked",
             "offset": 0,
             "slot": "13",
             "type": "t_mapping(t_address,t_bool)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:103"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:103"
           },
           {
             "label": "tokenIndexInArray",
             "offset": 0,
             "slot": "14",
             "type": "t_mapping(t_uint256,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:104"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:104"
           },
           {
             "label": "owedRewards",
             "offset": 0,
             "slot": "15",
             "type": "t_mapping(t_address,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:105"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:105"
           },
           {
             "label": "requestIdToMintId",
             "offset": 0,
             "slot": "16",
             "type": "t_mapping(t_uint64,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:106"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:106"
           },
           {
             "label": "mintRequests",
             "offset": 0,
             "slot": "17",
             "type": "t_mapping(t_uint64,t_struct(MintRequest)9657_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:107"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:107"
           },
           {
             "label": "mintRequestsByUser",
             "offset": 0,
             "slot": "18",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:108"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:108"
           },
           {
             "label": "rollTypes",
             "offset": 0,
             "slot": "19",
             "type": "t_mapping(t_uint8,t_struct(RollType)9671_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:110"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:110"
           },
           {
             "label": "rarityLevels",
             "offset": 0,
             "slot": "20",
             "type": "t_mapping(t_uint8,t_struct(RarityLevel)9664_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:111"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:111"
           }
         ],
         "types": {
@@ -1543,7 +1543,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_struct(StakedTokens)9638_storage)": {
-            "label": "mapping(uint256 => struct DragonsLair.StakedTokens)",
+            "label": "mapping(uint256 => struct DragonForge.StakedTokens)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_uint256)": {
@@ -1551,7 +1551,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_struct(MintRequest)9657_storage)": {
-            "label": "mapping(uint64 => struct DragonsLair.MintRequest)",
+            "label": "mapping(uint64 => struct DragonForge.MintRequest)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_uint256)": {
@@ -1559,11 +1559,11 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RarityLevel)9664_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RarityLevel)",
+            "label": "mapping(uint8 => struct DragonForge.RarityLevel)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RollType)9671_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RollType)",
+            "label": "mapping(uint8 => struct DragonForge.RollType)",
             "numberOfBytes": "32"
           },
           "t_string_storage": {
@@ -1571,7 +1571,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(MintRequest)9657_storage": {
-            "label": "struct DragonsLair.MintRequest",
+            "label": "struct DragonForge.MintRequest",
             "members": [
               {
                 "label": "user",
@@ -1631,7 +1631,7 @@
             "numberOfBytes": "192"
           },
           "t_struct(RarityLevel)9664_storage": {
-            "label": "struct DragonsLair.RarityLevel",
+            "label": "struct DragonForge.RarityLevel",
             "members": [
               {
                 "label": "minted",
@@ -1655,7 +1655,7 @@
             "numberOfBytes": "96"
           },
           "t_struct(RollType)9671_storage": {
-            "label": "struct DragonsLair.RollType",
+            "label": "struct DragonForge.RollType",
             "members": [
               {
                 "label": "price",
@@ -1673,7 +1673,7 @@
             "numberOfBytes": "224"
           },
           "t_struct(StakedTokens)9638_storage": {
-            "label": "struct DragonsLair.StakedTokens",
+            "label": "struct DragonForge.StakedTokens",
             "members": [
               {
                 "label": "owner",
@@ -1748,192 +1748,192 @@
             "offset": 0,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:97"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:97"
           },
           {
             "label": "pointsPerHourPerToken",
             "offset": 0,
             "slot": "1",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:98"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:98"
           },
           {
             "label": "pointsPerDayPerToken",
             "offset": 0,
             "slot": "2",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:99"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:99"
           },
           {
             "label": "mintedDragonCount",
             "offset": 0,
             "slot": "3",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:100"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:100"
           },
           {
             "label": "mintRequestId",
             "offset": 0,
             "slot": "4",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:101"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:101"
           },
           {
             "label": "stakingInProgress",
             "offset": 0,
             "slot": "5",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:102"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:102"
           },
           {
             "label": "allStakers",
             "offset": 0,
             "slot": "6",
             "type": "t_array(t_address)dyn_storage",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:103"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:103"
           },
           {
             "label": "dragons",
             "offset": 0,
             "slot": "7",
             "type": "t_contract(IERC721)4146",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:104"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:104"
           },
           {
             "label": "derpyDragons",
             "offset": 0,
             "slot": "8",
             "type": "t_contract(IDerpyDragons)9400",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:105"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:105"
           },
           {
             "label": "entropy",
             "offset": 0,
             "slot": "9",
             "type": "t_contract(IEntropy)9321",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:106"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:106"
           },
           {
             "label": "provider",
             "offset": 0,
             "slot": "10",
             "type": "t_address",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:107"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:107"
           },
           {
             "label": "rolesInitialized",
             "offset": 20,
             "slot": "10",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:108"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:108"
           },
           {
             "label": "rarityLevelsInitialized",
             "offset": 21,
             "slot": "10",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:109"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:109"
           },
           {
             "label": "existingRolls",
             "offset": 0,
             "slot": "11",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:110"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:110"
           },
           {
             "label": "stakedTokenIds",
             "offset": 0,
             "slot": "12",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:112"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:112"
           },
           {
             "label": "stakedTokenProps",
             "offset": 0,
             "slot": "13",
             "type": "t_mapping(t_uint256,t_struct(StakedTokens)9553_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:113"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:113"
           },
           {
             "label": "hasStaked",
             "offset": 0,
             "slot": "14",
             "type": "t_mapping(t_address,t_bool)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:115"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:115"
           },
           {
             "label": "tokenIndexInArray",
             "offset": 0,
             "slot": "15",
             "type": "t_mapping(t_uint256,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:116"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:116"
           },
           {
             "label": "owedRewards",
             "offset": 0,
             "slot": "16",
             "type": "t_mapping(t_address,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:117"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:117"
           },
           {
             "label": "requestIdToMintId",
             "offset": 0,
             "slot": "17",
             "type": "t_mapping(t_uint64,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:118"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:118"
           },
           {
             "label": "mintRequests",
             "offset": 0,
             "slot": "18",
             "type": "t_mapping(t_uint64,t_struct(MintRequest)9572_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:119"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:119"
           },
           {
             "label": "mintRequestsByUser",
             "offset": 0,
             "slot": "19",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:120"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:120"
           },
           {
             "label": "rollTypes",
             "offset": 0,
             "slot": "20",
             "type": "t_mapping(t_uint8,t_struct(RollType)9585_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:122"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:122"
           },
           {
             "label": "rarityLevels",
             "offset": 0,
             "slot": "21",
             "type": "t_mapping(t_uint8,t_struct(RarityLevel)9579_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:123"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:123"
           }
         ],
         "types": {
@@ -2028,7 +2028,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_struct(StakedTokens)9553_storage)": {
-            "label": "mapping(uint256 => struct DragonsLair.StakedTokens)",
+            "label": "mapping(uint256 => struct DragonForge.StakedTokens)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_uint256)": {
@@ -2036,7 +2036,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_struct(MintRequest)9572_storage)": {
-            "label": "mapping(uint64 => struct DragonsLair.MintRequest)",
+            "label": "mapping(uint64 => struct DragonForge.MintRequest)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_uint256)": {
@@ -2044,11 +2044,11 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RarityLevel)9579_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RarityLevel)",
+            "label": "mapping(uint8 => struct DragonForge.RarityLevel)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RollType)9585_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RollType)",
+            "label": "mapping(uint8 => struct DragonForge.RollType)",
             "numberOfBytes": "32"
           },
           "t_string_storage": {
@@ -2056,7 +2056,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(MintRequest)9572_storage": {
-            "label": "struct DragonsLair.MintRequest",
+            "label": "struct DragonForge.MintRequest",
             "members": [
               {
                 "label": "user",
@@ -2116,7 +2116,7 @@
             "numberOfBytes": "192"
           },
           "t_struct(RarityLevel)9579_storage": {
-            "label": "struct DragonsLair.RarityLevel",
+            "label": "struct DragonForge.RarityLevel",
             "members": [
               {
                 "label": "minted",
@@ -2140,7 +2140,7 @@
             "numberOfBytes": "96"
           },
           "t_struct(RollType)9585_storage": {
-            "label": "struct DragonsLair.RollType",
+            "label": "struct DragonForge.RollType",
             "members": [
               {
                 "label": "price",
@@ -2158,7 +2158,7 @@
             "numberOfBytes": "64"
           },
           "t_struct(StakedTokens)9553_storage": {
-            "label": "struct DragonsLair.StakedTokens",
+            "label": "struct DragonForge.StakedTokens",
             "members": [
               {
                 "label": "owner",
@@ -2233,216 +2233,216 @@
             "offset": 0,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:100"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:100"
           },
           {
             "label": "pointsPerHourPerToken",
             "offset": 0,
             "slot": "1",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:101"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:101"
           },
           {
             "label": "pointsPerDayPerToken",
             "offset": 0,
             "slot": "2",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:102"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:102"
           },
           {
             "label": "mintedDragonCount",
             "offset": 0,
             "slot": "3",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:103"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:103"
           },
           {
             "label": "mintRequestId",
             "offset": 0,
             "slot": "4",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:104"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:104"
           },
           {
             "label": "checkinBonus",
             "offset": 0,
             "slot": "5",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:105"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:105"
           },
           {
             "label": "stakingInProgress",
             "offset": 0,
             "slot": "6",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:106"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:106"
           },
           {
             "label": "allStakers",
             "offset": 0,
             "slot": "7",
             "type": "t_array(t_address)dyn_storage",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:107"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:107"
           },
           {
             "label": "dragons",
             "offset": 0,
             "slot": "8",
             "type": "t_contract(IERC721)4146",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:108"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:108"
           },
           {
             "label": "dinnerParty",
             "offset": 0,
             "slot": "9",
             "type": "t_contract(IERC721)4146",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:109"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:109"
           },
           {
             "label": "derpyDragons",
             "offset": 0,
             "slot": "10",
             "type": "t_contract(IDerpyDragons)9400",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:110"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:110"
           },
           {
             "label": "entropy",
             "offset": 0,
             "slot": "11",
             "type": "t_contract(IEntropy)9321",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:111"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:111"
           },
           {
             "label": "provider",
             "offset": 0,
             "slot": "12",
             "type": "t_address",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:112"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:112"
           },
           {
             "label": "rolesInitialized",
             "offset": 20,
             "slot": "12",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:113"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:113"
           },
           {
             "label": "rarityLevelsInitialized",
             "offset": 21,
             "slot": "12",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:114"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:114"
           },
           {
             "label": "existingRolls",
             "offset": 0,
             "slot": "13",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:115"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:115"
           },
           {
             "label": "lastCheckinTimestamp",
             "offset": 0,
             "slot": "14",
             "type": "t_mapping(t_address,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:117"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:117"
           },
           {
             "label": "stakedTokenIds",
             "offset": 0,
             "slot": "15",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:118"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:118"
           },
           {
             "label": "stakedTokenProps",
             "offset": 0,
             "slot": "16",
             "type": "t_mapping(t_uint256,t_struct(StakedTokens)9567_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:119"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:119"
           },
           {
             "label": "hasStaked",
             "offset": 0,
             "slot": "17",
             "type": "t_mapping(t_address,t_bool)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:121"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:121"
           },
           {
             "label": "tokenIndexInArray",
             "offset": 0,
             "slot": "18",
             "type": "t_mapping(t_uint256,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:122"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:122"
           },
           {
             "label": "owedRewards",
             "offset": 0,
             "slot": "19",
             "type": "t_mapping(t_address,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:123"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:123"
           },
           {
             "label": "requestIdToMintId",
             "offset": 0,
             "slot": "20",
             "type": "t_mapping(t_uint64,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:124"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:124"
           },
           {
             "label": "mintRequests",
             "offset": 0,
             "slot": "21",
             "type": "t_mapping(t_uint64,t_struct(MintRequest)9586_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:125"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:125"
           },
           {
             "label": "mintRequestsByUser",
             "offset": 0,
             "slot": "22",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:126"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:126"
           },
           {
             "label": "rollTypes",
             "offset": 0,
             "slot": "23",
             "type": "t_mapping(t_uint8,t_struct(RollType)9599_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:128"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:128"
           },
           {
             "label": "rarityLevels",
             "offset": 0,
             "slot": "24",
             "type": "t_mapping(t_uint8,t_struct(RarityLevel)9593_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:129"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:129"
           }
         ],
         "types": {
@@ -2537,7 +2537,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_struct(StakedTokens)9567_storage)": {
-            "label": "mapping(uint256 => struct DragonsLair.StakedTokens)",
+            "label": "mapping(uint256 => struct DragonForge.StakedTokens)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_uint256)": {
@@ -2545,7 +2545,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_struct(MintRequest)9586_storage)": {
-            "label": "mapping(uint64 => struct DragonsLair.MintRequest)",
+            "label": "mapping(uint64 => struct DragonForge.MintRequest)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_uint256)": {
@@ -2553,11 +2553,11 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RarityLevel)9593_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RarityLevel)",
+            "label": "mapping(uint8 => struct DragonForge.RarityLevel)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RollType)9599_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RollType)",
+            "label": "mapping(uint8 => struct DragonForge.RollType)",
             "numberOfBytes": "32"
           },
           "t_string_storage": {
@@ -2565,7 +2565,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(MintRequest)9586_storage": {
-            "label": "struct DragonsLair.MintRequest",
+            "label": "struct DragonForge.MintRequest",
             "members": [
               {
                 "label": "user",
@@ -2625,7 +2625,7 @@
             "numberOfBytes": "192"
           },
           "t_struct(RarityLevel)9593_storage": {
-            "label": "struct DragonsLair.RarityLevel",
+            "label": "struct DragonForge.RarityLevel",
             "members": [
               {
                 "label": "minted",
@@ -2649,7 +2649,7 @@
             "numberOfBytes": "96"
           },
           "t_struct(RollType)9599_storage": {
-            "label": "struct DragonsLair.RollType",
+            "label": "struct DragonForge.RollType",
             "members": [
               {
                 "label": "price",
@@ -2667,7 +2667,7 @@
             "numberOfBytes": "64"
           },
           "t_struct(StakedTokens)9567_storage": {
-            "label": "struct DragonsLair.StakedTokens",
+            "label": "struct DragonForge.StakedTokens",
             "members": [
               {
                 "label": "owner",
@@ -2742,232 +2742,232 @@
             "offset": 0,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:103"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:103"
           },
           {
             "label": "rolesInitialized",
             "offset": 1,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:104"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:104"
           },
           {
             "label": "rarityLevelsInitialized",
             "offset": 2,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:105"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:105"
           },
           {
             "label": "stakingInProgress",
             "offset": 3,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:106"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:106"
           },
           {
             "label": "pointsPerHourPerToken",
             "offset": 0,
             "slot": "1",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:108"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:108"
           },
           {
             "label": "pointsPerDayPerToken",
             "offset": 0,
             "slot": "2",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:109"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:109"
           },
           {
             "label": "mintedDragonCount",
             "offset": 0,
             "slot": "3",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:110"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:110"
           },
           {
             "label": "mintRequestId",
             "offset": 0,
             "slot": "4",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:111"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:111"
           },
           {
             "label": "checkinBonus",
             "offset": 0,
             "slot": "5",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:112"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:112"
           },
           {
             "label": "dinnerPartyDiscount",
             "offset": 0,
             "slot": "6",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:113"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:113"
           },
           {
             "label": "existingRolls",
             "offset": 0,
             "slot": "7",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:114"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:114"
           },
           {
             "label": "dinnerPartyDailyBonus",
             "offset": 0,
             "slot": "8",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:115"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:115"
           },
           {
             "label": "allStakers",
             "offset": 0,
             "slot": "9",
             "type": "t_array(t_address)dyn_storage",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:117"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:117"
           },
           {
             "label": "provider",
             "offset": 0,
             "slot": "10",
             "type": "t_address",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:118"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:118"
           },
           {
             "label": "dragons",
             "offset": 0,
             "slot": "11",
             "type": "t_contract(IERC721)4146",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:120"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:120"
           },
           {
             "label": "dinnerParty",
             "offset": 0,
             "slot": "12",
             "type": "t_contract(IERC721)4146",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:121"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:121"
           },
           {
             "label": "dwaginz",
             "offset": 0,
             "slot": "13",
             "type": "t_contract(IDwaginz)9400",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:122"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:122"
           },
           {
             "label": "entropy",
             "offset": 0,
             "slot": "14",
             "type": "t_contract(IEntropy)9321",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:123"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:123"
           },
           {
             "label": "lastCheckinTimestamp",
             "offset": 0,
             "slot": "15",
             "type": "t_mapping(t_address,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:125"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:125"
           },
           {
             "label": "stakedTokenIds",
             "offset": 0,
             "slot": "16",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:126"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:126"
           },
           {
             "label": "stakedTokenProps",
             "offset": 0,
             "slot": "17",
             "type": "t_mapping(t_uint256,t_struct(StakedTokens)9579_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:127"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:127"
           },
           {
             "label": "hasStaked",
             "offset": 0,
             "slot": "18",
             "type": "t_mapping(t_address,t_bool)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:129"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:129"
           },
           {
             "label": "tokenIndexInArray",
             "offset": 0,
             "slot": "19",
             "type": "t_mapping(t_uint256,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:130"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:130"
           },
           {
             "label": "owedRewards",
             "offset": 0,
             "slot": "20",
             "type": "t_mapping(t_address,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:131"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:131"
           },
           {
             "label": "requestIdToMintId",
             "offset": 0,
             "slot": "21",
             "type": "t_mapping(t_uint64,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:132"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:132"
           },
           {
             "label": "mintRequests",
             "offset": 0,
             "slot": "22",
             "type": "t_mapping(t_uint64,t_struct(MintRequest)9598_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:133"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:133"
           },
           {
             "label": "mintRequestsByUser",
             "offset": 0,
             "slot": "23",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:134"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:134"
           },
           {
             "label": "rollTypes",
             "offset": 0,
             "slot": "24",
             "type": "t_mapping(t_uint8,t_struct(RollType)9611_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:136"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:136"
           },
           {
             "label": "rarityLevels",
             "offset": 0,
             "slot": "25",
             "type": "t_mapping(t_uint8,t_struct(RarityLevel)9605_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:137"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:137"
           }
         ],
         "types": {
@@ -3062,7 +3062,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_struct(StakedTokens)9579_storage)": {
-            "label": "mapping(uint256 => struct DragonsLair.StakedTokens)",
+            "label": "mapping(uint256 => struct DragonForge.StakedTokens)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_uint256)": {
@@ -3070,7 +3070,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_struct(MintRequest)9598_storage)": {
-            "label": "mapping(uint64 => struct DragonsLair.MintRequest)",
+            "label": "mapping(uint64 => struct DragonForge.MintRequest)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_uint256)": {
@@ -3078,11 +3078,11 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RarityLevel)9605_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RarityLevel)",
+            "label": "mapping(uint8 => struct DragonForge.RarityLevel)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RollType)9611_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RollType)",
+            "label": "mapping(uint8 => struct DragonForge.RollType)",
             "numberOfBytes": "32"
           },
           "t_string_storage": {
@@ -3090,7 +3090,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(MintRequest)9598_storage": {
-            "label": "struct DragonsLair.MintRequest",
+            "label": "struct DragonForge.MintRequest",
             "members": [
               {
                 "label": "user",
@@ -3150,7 +3150,7 @@
             "numberOfBytes": "192"
           },
           "t_struct(RarityLevel)9605_storage": {
-            "label": "struct DragonsLair.RarityLevel",
+            "label": "struct DragonForge.RarityLevel",
             "members": [
               {
                 "label": "minted",
@@ -3174,7 +3174,7 @@
             "numberOfBytes": "96"
           },
           "t_struct(RollType)9611_storage": {
-            "label": "struct DragonsLair.RollType",
+            "label": "struct DragonForge.RollType",
             "members": [
               {
                 "label": "price",
@@ -3192,7 +3192,7 @@
             "numberOfBytes": "64"
           },
           "t_struct(StakedTokens)9579_storage": {
-            "label": "struct DragonsLair.StakedTokens",
+            "label": "struct DragonForge.StakedTokens",
             "members": [
               {
                 "label": "owner",
@@ -3267,240 +3267,240 @@
             "offset": 0,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:105"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:105"
           },
           {
             "label": "mintingOpen",
             "offset": 1,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:106"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:106"
           },
           {
             "label": "rolesInitialized",
             "offset": 2,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:107"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:107"
           },
           {
             "label": "rarityLevelsInitialized",
             "offset": 3,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:108"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:108"
           },
           {
             "label": "stakingInProgress",
             "offset": 4,
             "slot": "0",
             "type": "t_bool",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:109"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:109"
           },
           {
             "label": "pointsPerHourPerToken",
             "offset": 0,
             "slot": "1",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:111"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:111"
           },
           {
             "label": "pointsPerDayPerToken",
             "offset": 0,
             "slot": "2",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:112"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:112"
           },
           {
             "label": "mintedDragonCount",
             "offset": 0,
             "slot": "3",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:113"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:113"
           },
           {
             "label": "mintRequestId",
             "offset": 0,
             "slot": "4",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:114"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:114"
           },
           {
             "label": "checkinBonus",
             "offset": 0,
             "slot": "5",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:115"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:115"
           },
           {
             "label": "dinnerPartyDiscount",
             "offset": 0,
             "slot": "6",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:116"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:116"
           },
           {
             "label": "existingRolls",
             "offset": 0,
             "slot": "7",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:117"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:117"
           },
           {
             "label": "dinnerPartyDailyBonus",
             "offset": 0,
             "slot": "8",
             "type": "t_uint256",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:118"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:118"
           },
           {
             "label": "allStakers",
             "offset": 0,
             "slot": "9",
             "type": "t_array(t_address)dyn_storage",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:120"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:120"
           },
           {
             "label": "provider",
             "offset": 0,
             "slot": "10",
             "type": "t_address",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:121"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:121"
           },
           {
             "label": "dragons",
             "offset": 0,
             "slot": "11",
             "type": "t_contract(IERC721)4146",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:123"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:123"
           },
           {
             "label": "dinnerParty",
             "offset": 0,
             "slot": "12",
             "type": "t_contract(IERC721)4146",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:124"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:124"
           },
           {
             "label": "dwaginz",
             "offset": 0,
             "slot": "13",
             "type": "t_contract(IDwaginz)9400",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:125"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:125"
           },
           {
             "label": "entropy",
             "offset": 0,
             "slot": "14",
             "type": "t_contract(IEntropy)9321",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:126"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:126"
           },
           {
             "label": "lastCheckinTimestamp",
             "offset": 0,
             "slot": "15",
             "type": "t_mapping(t_address,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:128"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:128"
           },
           {
             "label": "stakedTokenIds",
             "offset": 0,
             "slot": "16",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:129"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:129"
           },
           {
             "label": "stakedTokenProps",
             "offset": 0,
             "slot": "17",
             "type": "t_mapping(t_uint256,t_struct(StakedTokens)9585_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:130"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:130"
           },
           {
             "label": "hasStaked",
             "offset": 0,
             "slot": "18",
             "type": "t_mapping(t_address,t_bool)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:132"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:132"
           },
           {
             "label": "tokenIndexInArray",
             "offset": 0,
             "slot": "19",
             "type": "t_mapping(t_uint256,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:133"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:133"
           },
           {
             "label": "owedRewards",
             "offset": 0,
             "slot": "20",
             "type": "t_mapping(t_address,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:134"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:134"
           },
           {
             "label": "requestIdToMintId",
             "offset": 0,
             "slot": "21",
             "type": "t_mapping(t_uint64,t_uint256)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:135"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:135"
           },
           {
             "label": "mintRequests",
             "offset": 0,
             "slot": "22",
             "type": "t_mapping(t_uint64,t_struct(MintRequest)9604_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:136"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:136"
           },
           {
             "label": "mintRequestsByUser",
             "offset": 0,
             "slot": "23",
             "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:137"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:137"
           },
           {
             "label": "rollTypes",
             "offset": 0,
             "slot": "24",
             "type": "t_mapping(t_uint8,t_struct(RollType)9617_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:139"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:139"
           },
           {
             "label": "rarityLevels",
             "offset": 0,
             "slot": "25",
             "type": "t_mapping(t_uint8,t_struct(RarityLevel)9611_storage)",
-            "contract": "DragonsLair",
-            "src": "contracts\\DragonsLair.sol:140"
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:140"
           }
         ],
         "types": {
@@ -3595,7 +3595,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_struct(StakedTokens)9585_storage)": {
-            "label": "mapping(uint256 => struct DragonsLair.StakedTokens)",
+            "label": "mapping(uint256 => struct DragonForge.StakedTokens)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint256,t_uint256)": {
@@ -3603,7 +3603,7 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_struct(MintRequest)9604_storage)": {
-            "label": "mapping(uint64 => struct DragonsLair.MintRequest)",
+            "label": "mapping(uint64 => struct DragonForge.MintRequest)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint64,t_uint256)": {
@@ -3611,11 +3611,11 @@
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RarityLevel)9611_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RarityLevel)",
+            "label": "mapping(uint8 => struct DragonForge.RarityLevel)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_uint8,t_struct(RollType)9617_storage)": {
-            "label": "mapping(uint8 => struct DragonsLair.RollType)",
+            "label": "mapping(uint8 => struct DragonForge.RollType)",
             "numberOfBytes": "32"
           },
           "t_string_storage": {
@@ -3623,7 +3623,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(MintRequest)9604_storage": {
-            "label": "struct DragonsLair.MintRequest",
+            "label": "struct DragonForge.MintRequest",
             "members": [
               {
                 "label": "user",
@@ -3683,7 +3683,7 @@
             "numberOfBytes": "192"
           },
           "t_struct(RarityLevel)9611_storage": {
-            "label": "struct DragonsLair.RarityLevel",
+            "label": "struct DragonForge.RarityLevel",
             "members": [
               {
                 "label": "minted",
@@ -3707,7 +3707,7 @@
             "numberOfBytes": "96"
           },
           "t_struct(RollType)9617_storage": {
-            "label": "struct DragonsLair.RollType",
+            "label": "struct DragonForge.RollType",
             "members": [
               {
                 "label": "price",
@@ -3725,7 +3725,7 @@
             "numberOfBytes": "64"
           },
           "t_struct(StakedTokens)9585_storage": {
-            "label": "struct DragonsLair.StakedTokens",
+            "label": "struct DragonForge.StakedTokens",
             "members": [
               {
                 "label": "owner",

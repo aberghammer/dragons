@@ -19,7 +19,7 @@ interface IDwaginz {
     function mint(address to, string memory tokenUri) external;
 }
 
-contract DragonsLairV2 is
+contract DragonForgeV2 is
     IEntropyConsumer,
     Initializable,
     OwnableUpgradeable,
