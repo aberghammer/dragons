@@ -63,3 +63,31 @@ export const lowAmountRarityLevels = [
     tokenUri: "ar://mythic-folder/",
   },
 ];
+
+export const lowAmountRarityLevelsTest = [
+  {
+    minted: 0,
+    maxSupply: 2,
+    tokenUri: "ar://common/",
+  },
+  {
+    minted: 0,
+    maxSupply: 2,
+    tokenUri: "ar://uncommon/",
+  },
+  {
+    minted: 0,
+    maxSupply: 2,
+    tokenUri: "ar://rare/",
+  },
+  {
+    minted: 0,
+    maxSupply: 2,
+    tokenUri: "ar://legendary/",
+  },
+  {
+    minted: 0,
+    maxSupply: 2,
+    tokenUri: "ar://mega/",
+  },
+];

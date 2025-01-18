@@ -1,34 +1,28 @@
 export const liveRarityLevels = [
   {
     minted: 0,
-    maxSupply: 800,
-    tokenUri: "ipfs://QmU1qyYyr3Qc68XHGPwFcdhB1kURXTu3YSS9swVYzpTRWX/", //Burning Man Experiment (BME)
+    maxSupply: 730,
+    tokenUri: "ar://common",
+  },
+  {
+    minted: 0,
+    maxSupply: 300,
+    tokenUri: "ar://uncommon/",
   },
   {
     minted: 0,
     maxSupply: 100,
-    tokenUri: "ipfs://QmNSXmwNaSFTHGhPk4VDw2DAoBdMtFbAhjCXCofG1cyuku/", //Complex Death (CoDe)
+    tokenUri: "ar://rare/",
   },
   {
     minted: 0,
-    maxSupply: 90,
-    tokenUri:
-      "ipfs://bafybeidcs5dwfzlllekfbzpo5c5np5hg6rgxh4kpgp2xjwgreiqdolnewa/", //Apechain Mfers (MFRS)
-  },
-  {
-    minted: 0,
-    maxSupply: 60,
-    tokenUri: "ar://epic-folder/",
+    maxSupply: 50,
+    tokenUri: "ar://legendary/",
   },
   {
     minted: 0,
     maxSupply: 20,
-    tokenUri: "ar://legendary-folder/",
-  },
-  {
-    minted: 0,
-    maxSupply: 10,
-    tokenUri: "ar://mythic-folder/",
+    tokenUri: "ar://mega/",
   },
 ];
 

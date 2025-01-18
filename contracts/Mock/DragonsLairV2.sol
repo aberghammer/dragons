@@ -176,7 +176,8 @@ contract DragonForgeV2 is
         RarityLevel[] memory _rarityLevels
     ) external onlyOwner {
         if (!rolesInitialized) revert RollsNotInitialized();
-        if (_rarityLevels.length != existingRolls) revert ConfigMismatch();
+        if (_rarityLevels.length != rollTypes[0].probabilities.length)
+            revert ConfigMismatch();
         for (uint8 i = 0; i < _rarityLevels.length; i++) {
             rarityLevels[i] = RarityLevel({
                 minted: 0,
@@ -261,7 +262,7 @@ contract DragonForgeV2 is
 
     /**
      * @dev Allows the owner to update the discount.
-     * @param discount The new points required.
+     * @param discount The discount in percent (required).
      */
     function setDinnerPartyDiscount(uint discount) external onlyOwner {
         dinnerPartyDiscount = discount;
@@ -549,15 +550,21 @@ contract DragonForgeV2 is
             revert NoMintsLeft();
         }
 
-        uint discount = dinnerParty.balanceOf(msg.sender) * dinnerPartyDiscount;
+        uint256 discountPercentage = 0;
+
+        if (dinnerPartyDiscount > 0) {
+            discountPercentage =
+                (dinnerParty.balanceOf(msg.sender) * 100) /
+                dinnerPartyDiscount;
+        }
 
         uint256 pointsRequired = rollTypes[rollType].price;
 
-        if (discount > pointsRequired) {
-            pointsRequired = 0;
-        } else {
-            pointsRequired -= discount;
+        if (discountPercentage > 50) {
+            discountPercentage = 50; // max 50% discount
         }
+
+        pointsRequired = (pointsRequired * (100 - discountPercentage)) / 100;
 
         (
             uint256 totalClaimable,
@@ -669,74 +676,124 @@ contract DragonForgeV2 is
         if (!request.requestCompleted) {
             revert RequestNotCompleted(sequenceNumber);
         }
-
         if (request.mintFinalized) {
             revert MintAlreadyCompleted(sequenceNumber);
         }
 
+        //1) First we check which rarities are still available
+        // Example: {Bin2 -> 18%, Bin3 -> 20%} => sum = 38.
         uint8[] memory availableRarities = new uint8[](existingRolls);
-        uint256 randomValue = request.randomNumber % 100;
-        uint8 finalRarityIndex = 0;
-        uint256 cumulativeProbability = 0;
-        uint256 usedRandomness = 0;
         uint256 availableCount = 0;
-
-        // Find the available rarities for the roll type example: [0,2,3] is still mintable.
         for (uint8 i = 0; i < existingRolls; i++) {
-            if (rarityLevels[i].minted < rarityLevels[i].maxSupply) {
+            if (
+                // bins with 0% probability are not available
+                rarityLevels[i].minted < rarityLevels[i].maxSupply &&
+                rollTypes[request.rollType].probabilities[i] > 0
+            ) {
                 availableRarities[availableCount] = i;
                 availableCount++;
             }
         }
 
-        for (uint8 attempt = 0; attempt < availableCount; attempt++) {
-            uint256 effectiveRandomValue = (attempt == 0)
-                ? randomValue
-                : uint256(
-                    keccak256(abi.encode(request.randomNumber, usedRandomness))
-                ) % 100;
-
-            for (uint8 j = 0; j < availableCount; j++) {
-                uint8 rarityIndex = availableRarities[j];
-                uint256 probability = rollTypes[request.rollType].probabilities[
-                    rarityIndex
-                ];
-
-                cumulativeProbability += probability;
-
-                if (effectiveRandomValue < cumulativeProbability) {
-                    finalRarityIndex = rarityIndex;
-                    break;
-                }
-            }
-
-            if (
-                rarityLevels[finalRarityIndex].minted <
-                rarityLevels[finalRarityIndex].maxSupply
-            ) {
-                break;
-            }
-
-            cumulativeProbability = 0;
-            usedRandomness++;
-            finalRarityIndex = 0;
-        }
-
-        if (
-            rarityLevels[finalRarityIndex].minted >=
-            rarityLevels[finalRarityIndex].maxSupply
-        ) {
+        //if a request wasn't resolved quick enough, and another user minted out, we refund the user
+        if (availableCount == 0) {
+            // If no tokens left -> Fail + Refund
             owedRewards[request.user] += rollTypes[request.rollType].price;
             request.cancelled = true;
             emit MintFailed(request.user, sequenceNumber);
             return;
         }
 
-        uint dragonNumberPerFolder = rarityLevels[finalRarityIndex].minted += 1;
-        mintedDragonCount += 1;
+        // 2) Calculate the total probability space
+        // Example: {Bin2 -> 18%, Bin3 -> 20%} => totalAvalableProbability = 38.
+        // Example: User rolls a 25 => effectiveRandomValue = 25.
+        // We need to find the rarity bin that corresponds to the effective random value
+        // Bin2 -> 18% so 25 fits not in Bin2
+        // Bin3 -> 20%: 20% + 18% = 38% => 25 < 38. So we select Bin3
+        uint256 totalAvailableProbability = 0;
+        for (uint8 k = 0; k < availableCount; k++) {
+            uint8 rarId = availableRarities[k];
+            totalAvailableProbability += rollTypes[request.rollType]
+                .probabilities[rarId];
+        }
+        // Security check: totalAvailableProbability must not be 0
+        // (should never happen if the contract is set up correctly)
+        // => Refund the user
+        if (totalAvailableProbability == 0) {
+            owedRewards[request.user] += rollTypes[request.rollType].price;
+            request.cancelled = true;
+            emit MintFailed(request.user, sequenceNumber);
+            return;
+        }
 
+        // We set up a logic to reroll if the selected rarity is full
+        uint8 finalRarityIndex = 0;
+        uint256 usedRandomness = 0;
+        bool minted = false;
+
+        // we try 5 times to find a rarity that is not full
+        for (uint8 attempt = 0; attempt < 5; attempt++) {
+            // 3) calculate the effective random value on the *entire* probability space
+            // instead of random % 100 => random % totalAvailableProbability
+            // So a number between 0 and totalAvailableProbability - 1
+            // Example: {Bin2 -> 18%, Bin3 -> 20%} => totalAvalableProbability = 38.
+            // => effectiveRandomValue = random % 38 = {0,...,37}
+            uint256 effectiveRandomValue = (attempt == 0)
+                ? (request.randomNumber % totalAvailableProbability)
+                : (uint256(
+                    keccak256(abi.encode(request.randomNumber, usedRandomness))
+                ) % totalAvailableProbability);
+
+            // 4) Find the rarity bin that corresponds to the effective random value
+            uint256 cumulativeProbability = 0;
+            for (uint8 j = 0; j < availableCount; j++) {
+                uint8 rarityIdx = availableRarities[j];
+                cumulativeProbability += rollTypes[request.rollType]
+                    .probabilities[rarityIdx];
+
+                if (effectiveRandomValue < cumulativeProbability) {
+                    // We found the rarity bin that corresponds to the effective random value
+                    finalRarityIndex = rarityIdx;
+                    break;
+                }
+            }
+
+            // 5) Check if the rarity bin is still available
+            if (
+                rarityLevels[finalRarityIndex].minted <
+                rarityLevels[finalRarityIndex].maxSupply
+            ) {
+                minted = true;
+                break; // exit the loop
+            } else {
+                // If the rarity bin is full
+                // (should never happen if the contract is set up correctly)
+                // as we dont't know if future szenarios will be different
+                // we leave it as it is
+                usedRandomness++;
+                finalRarityIndex = 0; // reset optional
+            }
+        }
+
+        // 6) Check if we found a rarity that is not full
+        // (should never happen if the contract is set up correctly)
+        // as we dont't know if future szenarios will be different
+        // we leave it as it is
+        if (!minted) {
+            // If no tokens left -> Fail + Refund
+            owedRewards[request.user] += rollTypes[request.rollType].price;
+            request.cancelled = true;
+            emit MintFailed(request.user, sequenceNumber);
+            return;
+        }
+
+        // 7) Minting the token
+        rarityLevels[finalRarityIndex].minted += 1;
+        mintedDragonCount += 1;
         request.tokenId = mintedDragonCount;
 
+        // Generate new URI
+        uint256 dragonNumberPerFolder = rarityLevels[finalRarityIndex].minted;
         string memory fullUri = string(
             abi.encodePacked(
                 rarityLevels[finalRarityIndex].tokenUri,
