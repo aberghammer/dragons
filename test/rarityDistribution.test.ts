@@ -324,5 +324,102 @@ describe("DragonForge Minting with Entropy", async function () {
         "MintFailed"
       );
     });
+
+    it("should correctly refund minted with bonus", async function () {
+      const { user1, dragonForge, entropy, dinnerParty, derpyDragons } =
+        await loadFixture(mintingFixture);
+
+      const rollTypes = [
+        {
+          price: 1000,
+          probabilities: [100, 0], // 100% Common
+        },
+        {
+          price: 2000,
+          probabilities: [0, 100],
+        },
+      ];
+
+      const rarityLevels = [
+        {
+          minted: 0,
+          maxSupply: 1,
+          tokenUri: "ar://common/",
+        },
+        {
+          minted: 0,
+          maxSupply: 1,
+          tokenUri: "ar://uncommon/",
+        },
+      ];
+
+      await dragonForge.connect(user1).unstake([1, 2, 3, 4, 5]);
+
+      const initialRewards = await dragonForge.pendingRewards(
+        user1.getAddress()
+      );
+
+      await dragonForge.initializeRollTypes(rollTypes);
+      await dragonForge.initializeRarityLevels(rarityLevels);
+
+      // Enable staking mode and stake tokens
+
+      // Mint token request
+      await dragonForge.connect(user1).requestToken(0, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      // now I get 10% discount
+      await dinnerParty.connect(user1).mint(user1.getAddress(), 1);
+
+      await dragonForge.connect(user1).requestToken(0, {
+        value: ethers.parseEther("0.01"), // Mock fee
+      });
+
+      console.log(await dragonForge.mintRequests(2));
+
+      expect((await dragonForge.mintRequests(1))[1]).to.equal(1000);
+      expect((await dragonForge.mintRequests(2))[1]).to.equal(900);
+
+      const rewardsBeforeRefund = await dragonForge.pendingRewards(
+        user1.getAddress()
+      );
+
+      expect(rewardsBeforeRefund).to.equal(initialRewards - 1900n);
+
+      //probabilities: [80, 16, 2, 1, 1], // so we roll 96
+      // 96 % 100 = 96
+      // Manually trigger the entropy callback
+      await entropy.fireCallbackManually(1, 12);
+      await entropy.fireCallbackManually(2, 12);
+
+      await dragonForge.selectRarityAndMint(1);
+      // Verify that the token was minted and assigned to the user
+      expect(await derpyDragons.ownerOf(1)).to.equal(await user1.getAddress());
+      expect(await dragonForge.mintedDragonCount()).to.equal(1);
+
+      const tokenUri = await derpyDragons.tokenURI(1);
+
+      expect(tokenUri).to.equal("ar://common/1.json");
+
+      console.log(
+        "before: ",
+        await dragonForge.pendingRewards(user1.getAddress())
+      );
+
+      await expect(dragonForge.selectRarityAndMint(2)).to.emit(
+        dragonForge,
+        "MintFailed"
+      );
+
+      console.log(
+        "after: ",
+        await dragonForge.pendingRewards(user1.getAddress())
+      );
+
+      expect(await dragonForge.pendingRewards(user1.getAddress())).to.equal(
+        rewardsBeforeRefund + 900n
+      );
+    });
   });
 });

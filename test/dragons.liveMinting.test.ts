@@ -136,7 +136,7 @@ describe("DragonForge Minting with Entropy", async function () {
           await dragonForge.connect(user1).selectRarityAndMint(sequenceNumber);
           let mr = await dragonForge.mintRequests(sequenceNumber);
 
-          let uri = mr[4];
+          let uri = mr[5];
 
           //   console.log("Minted token event:", uri);
           if (uri.includes("//common")) {

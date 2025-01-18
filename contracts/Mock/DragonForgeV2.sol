@@ -81,6 +81,7 @@ contract DragonForgeV2 is
 
     struct MintRequest {
         address user;
+        uint256 payedPrice;
         uint256 tokenId;
         uint256 randomNumber;
         uint256 timestamp;
@@ -594,6 +595,7 @@ contract DragonForgeV2 is
 
         mintRequests[sequenceNumber] = MintRequest({
             user: msg.sender,
+            payedPrice: pointsRequired,
             tokenId: 0,
             randomNumber: 0,
             timestamp: block.timestamp,
@@ -658,8 +660,7 @@ contract DragonForgeV2 is
             );
         }
 
-        uint256 pointsRequired = rollTypes[request.rollType].price;
-        owedRewards[request.user] += pointsRequired;
+        owedRewards[request.user] += request.payedPrice;
 
         request.cancelled = true;
 
@@ -698,7 +699,7 @@ contract DragonForgeV2 is
         //if a request wasn't resolved quick enough, and another user minted out, we refund the user
         if (availableCount == 0) {
             // If no tokens left -> Fail + Refund
-            owedRewards[request.user] += rollTypes[request.rollType].price;
+            owedRewards[request.user] += request.payedPrice;
             request.cancelled = true;
             emit MintFailed(request.user, sequenceNumber);
             return;
@@ -720,7 +721,7 @@ contract DragonForgeV2 is
         // (should never happen if the contract is set up correctly)
         // => Refund the user
         if (totalAvailableProbability == 0) {
-            owedRewards[request.user] += rollTypes[request.rollType].price;
+            owedRewards[request.user] += request.payedPrice;
             request.cancelled = true;
             emit MintFailed(request.user, sequenceNumber);
             return;
@@ -781,7 +782,7 @@ contract DragonForgeV2 is
         // we leave it as it is
         if (!minted) {
             // If no tokens left -> Fail + Refund
-            owedRewards[request.user] += rollTypes[request.rollType].price;
+            owedRewards[request.user] += request.payedPrice;
             request.cancelled = true;
             emit MintFailed(request.user, sequenceNumber);
             return;
