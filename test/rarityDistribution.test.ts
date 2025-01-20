@@ -143,9 +143,9 @@ describe("DragonForge Minting with Entropy", async function () {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
-      //probabilities: [80, 16, 2, 1, 1], // so we roll 99
+      //probabilities: 8000, 1600, 200, 100, 100, // so we roll 9999
       // Manually trigger the entropy callback
-      await entropy.fireCallbackManually(1, 99);
+      await entropy.fireCallbackManually(1, 9900); //9900 % 10000 = 9900 & 9999 % 10000 = 9999
 
       await dragonForge.selectRarityAndMint(1);
       // Verify that the token was minted and assigned to the user
@@ -166,7 +166,7 @@ describe("DragonForge Minting with Entropy", async function () {
       });
 
       // we mint another mega
-      await entropy.fireCallbackManually(2, 99);
+      await entropy.fireCallbackManually(2, 9999);
 
       await dragonForge.selectRarityAndMint(2);
       // Verify that the token was minted and assigned to the user
@@ -205,10 +205,10 @@ describe("DragonForge Minting with Entropy", async function () {
         value: ethers.parseEther("0.01"), // Mock fee
       });
 
-      //probabilities: [80, 16, 2, 1, 1], // so we roll 96
-      // 96 % 100 = 96
+      //probabilities: [8000, 1600, 200, 10, 10], // so we roll 8000- 9599
+      // 9599 % 10000 = 9599
       // Manually trigger the entropy callback
-      await entropy.fireCallbackManually(1, 95);
+      await entropy.fireCallbackManually(1, 9599);
 
       await dragonForge.selectRarityAndMint(1);
       // Verify that the token was minted and assigned to the user
@@ -229,7 +229,7 @@ describe("DragonForge Minting with Entropy", async function () {
       });
 
       // we mint another
-      await entropy.fireCallbackManually(2, 95);
+      await entropy.fireCallbackManually(2, 9500);
 
       await dragonForge.selectRarityAndMint(2);
       // Verify that the token was minted and assigned to the user
@@ -245,7 +245,7 @@ describe("DragonForge Minting with Entropy", async function () {
       // 95 % 84 = 11
       // we get a common
 
-      await entropy.fireCallbackManually(3, 95);
+      await entropy.fireCallbackManually(3, 950);
 
       await dragonForge.selectRarityAndMint(3);
       // Verify that the token was minted and assigned to the user
@@ -269,11 +269,11 @@ describe("DragonForge Minting with Entropy", async function () {
       const rollTypes = [
         {
           price: 1000,
-          probabilities: [100, 0], // 100% Common
+          probabilities: [10000, 0], // 100% Common
         },
         {
           price: 2000,
-          probabilities: [0, 100],
+          probabilities: [0, 10000],
         },
       ];
 
@@ -332,11 +332,11 @@ describe("DragonForge Minting with Entropy", async function () {
       const rollTypes = [
         {
           price: 1000,
-          probabilities: [100, 0], // 100% Common
+          probabilities: [10000, 0], // 100% Common
         },
         {
           price: 2000,
-          probabilities: [0, 100],
+          probabilities: [0, 10000],
         },
       ];
 

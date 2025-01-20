@@ -204,7 +204,7 @@ contract DragonForge is
                 totalProbability += newRollTypes[i].probabilities[j];
             }
 
-            if (totalProbability != 100) {
+            if (totalProbability != 10000) {
                 revert InvalidProbabilitySum();
             }
 
@@ -682,12 +682,12 @@ contract DragonForge is
         }
 
         //1) First we check which rarities are still available
-        // Example: {Bin2 -> 18%, Bin3 -> 20%} => sum = 38.
+        // Example: {common -> 18%, uncommon -> 20%} => sum = 38.
         uint8[] memory availableRarities = new uint8[](existingRolls);
         uint256 availableCount = 0;
         for (uint8 i = 0; i < existingRolls; i++) {
             if (
-                // bins with 0% probability are not available
+                // rarities with 0% probability are not available
                 rarityLevels[i].minted < rarityLevels[i].maxSupply &&
                 rollTypes[request.rollType].probabilities[i] > 0
             ) {
@@ -698,7 +698,7 @@ contract DragonForge is
 
         //if a request wasn't resolved quick enough, and another user minted out, we refund the user
         if (availableCount == 0) {
-            // If no tokens left -> Fail + Refund
+            // If no tokens of rarity left -> Fail + Refund
             owedRewards[request.user] += request.payedPrice;
             request.cancelled = true;
             emit MintFailed(request.user, sequenceNumber);
@@ -706,11 +706,11 @@ contract DragonForge is
         }
 
         // 2) Calculate the total probability space
-        // Example: {Bin2 -> 18%, Bin3 -> 20%} => totalAvalableProbability = 38.
+        // Example: {common -> 18%, uncomon -> 20%} => totalAvalableProbability = 38.
         // Example: User rolls a 25 => effectiveRandomValue = 25.
         // We need to find the rarity bin that corresponds to the effective random value
-        // Bin2 -> 18% so 25 fits not in Bin2
-        // Bin3 -> 20%: 20% + 18% = 38% => 25 < 38. So we select Bin3
+        // common -> 18% so 25 fits not in Bin2
+        // uncommon + common --> 20% + 18% = 38% => 25% < 38%. So we select uncommon
         uint256 totalAvailableProbability = 0;
         for (uint8 k = 0; k < availableCount; k++) {
             uint8 rarId = availableRarities[k];
@@ -727,7 +727,7 @@ contract DragonForge is
             return;
         }
 
-        // We set up a logic to reroll if the selected rarity is full
+        // We set up a logic to reroll if the selected rarity is minted out
         uint8 finalRarityIndex = 0;
         uint256 usedRandomness = 0;
         bool minted = false;
@@ -737,7 +737,7 @@ contract DragonForge is
             // 3) calculate the effective random value on the *entire* probability space
             // instead of random % 100 => random % totalAvailableProbability
             // So a number between 0 and totalAvailableProbability - 1
-            // Example: {Bin2 -> 18%, Bin3 -> 20%} => totalAvalableProbability = 38.
+            // Example: {common -> 18%, uncommon -> 20%} => totalAvalableProbability = 38%.
             // => effectiveRandomValue = random % 38 = {0,...,37}
             uint256 effectiveRandomValue = (attempt == 0)
                 ? (request.randomNumber % totalAvailableProbability)

@@ -2,7 +2,7 @@ export const liveRarityLevels = [
   {
     minted: 0,
     maxSupply: 730,
-    tokenUri: "ar://common",
+    tokenUri: "ar://common/",
   },
   {
     minted: 0,

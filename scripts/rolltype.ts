@@ -8,26 +8,26 @@ interface RollType {
 export const rollTypes: RollType[] = [
   {
     price: 3600,
-    probabilities: [80, 16, 2, 1, 1], // 80% Common
+    probabilities: [8000, 1600, 340, 46, 14], // 8000 + 1600 + 320 + 48 + 32 = 10000
   },
   {
     price: 7200,
-    probabilities: [60, 30, 7, 2, 1], // 60% Common, 30% Uncommon, ...
+    probabilities: [6000, 3000, 760, 200, 40], // 60% Common, 30% Uncommon, ...
   },
   {
     price: 10800,
-    probabilities: [40, 41, 12, 5, 2], // 40% Common, 41% Uncommon, 12% Rare
+    probabilities: [4250, 3920, 1176, 458, 196], // 40% Common, 41% Uncommon, 12% Rare
   },
   {
     price: 14400,
-    probabilities: [14, 46, 23, 12, 5], // 14% Common, 46% Uncommon, ...
+    probabilities: [1340, 4625, 2273, 1225, 537], // 14% Common, 46% Uncommon, ...
   },
   {
     price: 21600,
-    probabilities: [10, 35, 25, 21, 9], // 10% Common, 35% Uncommon, ...
+    probabilities: [900, 3550, 2450, 2190, 910], // 10% Common, 35% Uncommon, ...
   },
   {
     price: 36000,
-    probabilities: [0, 24, 29, 33, 14], // 0% Common, 24% Uncommon, ...
+    probabilities: [0, 2390, 2856, 3334, 1420], // 0% Common, 24% Uncommon, ...
   },
 ];

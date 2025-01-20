@@ -253,11 +253,11 @@ describe("DragonForge Admin Tests", async function () {
       // Verify roll types using the getRollTypeById function
       const rollType0 = await dragonForge.getRollTypeById(0);
       expect(rollType0.price).to.equal(1000n);
-      expect(rollType0.probabilities).to.deep.equal([100n, 0, 0, 0, 0, 0]);
+      expect(rollType0.probabilities).to.deep.equal([10000n, 0, 0, 0, 0, 0]);
 
       const rollType1 = await dragonForge.getRollTypeById(1);
       expect(rollType1.price).to.equal(2000n);
-      expect(rollType1.probabilities).to.deep.equal([60n, 40, 0, 0, 0, 0]);
+      expect(rollType1.probabilities).to.deep.equal([6000n, 4000, 0, 0, 0, 0]);
     });
 
     it("should revert if probabilities do not sum to 100", async function () {

@@ -17,8 +17,8 @@ async function main() {
   const dwaginz = await Dwaginz.deploy(
     deployerAddress, // Royalty Receiver
     500, // Royalty fee numerator (5%)
-    "Testi Testo", // Token name
-    "TT" // Token symbol
+    "DWAGINZ", // Token name
+    "D" // Token symbol
   );
 
   // Wait for deployment
@@ -42,4 +42,4 @@ main().catch((error) => {
 // 2. Verify
 // 3. Set Dragons Lair Contract
 
-// npx hardhat verify 0x0Fd350B269A30a3c38fe1E2F81eF417a02B00Ec8 0xE09eA9cBc76b0105dd32312D4a2E37B4d4c7a43c 500 "Testi Testo" "TT" --network ApeChain
+// npx hardhat verify 0x5FbDB2315678afecb367f032d93F642f64180aa3 0xE09eA9cBc76b0105dd32312D4a2E37B4d4c7a43c 500 "DWAGINZ" "D" --network ApeChain
