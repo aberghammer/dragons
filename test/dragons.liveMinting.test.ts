@@ -61,7 +61,7 @@ describe("DragonForge Minting with Entropy", async function () {
     await dragonForge.setDinnerPartyDiscount(0);
     await dragonForge.setDinnerPartyDailyBonus(0);
 
-    await dragonForge.initializeRollTypes(rollTypes);
+    await dragonForge.initializeTierTypes(rollTypes);
     await dragonForge.initializeRarityLevels(liveRarityLevels);
 
     // Set the DragonForge contract as the caller for the entropy contract
@@ -114,8 +114,8 @@ describe("DragonForge Minting with Entropy", async function () {
 
       let initialRewards = await dragonForge.pendingRewards(user1.getAddress());
 
-      let mintsperbin = [624, 250, 153, 75, 56, 42];
-
+      // let mintsperbin = [624, 250, 153, 75, 56, 42];
+      let mintsperbin = [1200]; // fails
       // Enable staking mode and stake tokens
       let sequenceNumber = 0;
       //for loop from 0 to 5 tiers

@@ -7,7 +7,7 @@ dotEnvConfig();
 async function main() {
   // Contract deployment address (replace with your deployed contract's address)
 
-  const dragonForge = "0x5fFc99eD082353ACe7446E64Fe0693Dc04cAAe95"; // Example address / DragonForge Address
+  const dragonForge = "0xEF62677e721003B849D8484a6301789B83f23df5"; // Example address / DragonForge Address
 
   // Get the contract factory and attach to the deployed address
   const DragonForge = await ethers.getContractFactory("DragonForge");
@@ -18,7 +18,7 @@ async function main() {
 
   console.log(rollTypes);
   //@ts-ignore
-  const tx = await dragonForgeContract.initializeRollTypes(rollTypes);
+  const tx = await dragonForgeContract.initializeTierTypes(rollTypes);
 
   // Wait for the transaction to be mined
   await tx.wait();

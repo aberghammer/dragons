@@ -6,7 +6,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { DragonForge } from "../typechain-types";
 import { rarityLevels } from "./rarityLevels";
-import { rollTypes } from "./rolltype";
+import { tierTypes } from "./tierType";
 
 describe("DragonForge Tests", async function () {
   async function cbcFixture() {
@@ -50,7 +50,7 @@ describe("DragonForge Tests", async function () {
 
     const dragonForge = dragonForgeUntyped as unknown as DragonForge;
 
-    await dragonForge.initializeRollTypes(rollTypes);
+    await dragonForge.initializeTierTypes(tierTypes);
     await dragonForge.initializeRarityLevels(rarityLevels);
 
     // console.log(await dragonForge.getAddress());

@@ -5,7 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { DragonForge } from "../typechain-types";
 import { rarityLevels } from "./rarityLevels";
-import { rollTypes } from "./rolltype";
+import { tierTypes } from "./tierType";
 
 describe("DragonForge Admin Tests", async function () {
   async function adminFixture() {
@@ -48,7 +48,7 @@ describe("DragonForge Admin Tests", async function () {
 
     const dragonForge = dragonForgeUntyped as unknown as DragonForge;
 
-    await dragonForge.initializeRollTypes(rollTypes);
+    await dragonForge.initializeTierTypes(tierTypes);
     await dragonForge.initializeRarityLevels(rarityLevels);
 
     return {
@@ -188,53 +188,37 @@ describe("DragonForge Admin Tests", async function () {
       const { owner, dragonForge } = await loadFixture(adminFixture);
 
       // Set points per day per token
-      const pointsPerDay = 1000;
+      const pointsPerHour = 1000;
       await expect(
-        dragonForge.connect(owner).setPointsPerDayPerToken(pointsPerDay)
+        dragonForge.connect(owner).setPointsPerHourPerToken(pointsPerHour)
       )
-        .to.emit(dragonForge, "PointsPerDayPerTokenUpdated")
-        .withArgs(pointsPerDay);
-
-      // Calculate expected points per hour
-      const expectedPointsPerHour = BigInt(pointsPerDay) / 24n;
-
-      // Verify the updated value for points per hour
-      expect(await dragonForge.pointsPerHourPerToken()).to.equal(
-        expectedPointsPerHour
-      );
+        .to.emit(dragonForge, "PointsPerHourPerDayUpdated")
+        .withArgs(pointsPerHour);
 
       // Verify the stored points per day value
-      expect(await dragonForge.pointsPerDayPerToken()).to.equal(pointsPerDay);
+      expect(await dragonForge.pointsPerHourPerToken()).to.equal(pointsPerHour);
     });
 
     it("should allow the owner to set points per day per token and calculate points per hour", async function () {
       const { owner, dragonForge } = await loadFixture(adminFixture);
 
-      // Set points per day per token
-      const pointsPerDay = 1000n;
+      // Set points per hour per token
+      const pointsPerHour = 1000n;
       await expect(
-        dragonForge.connect(owner).setPointsPerDayPerToken(pointsPerDay)
+        dragonForge.connect(owner).setPointsPerHourPerToken(pointsPerHour)
       )
-        .to.emit(dragonForge, "PointsPerDayPerTokenUpdated")
-        .withArgs(pointsPerDay);
-
-      // Calculate expected points per hour
-      const expectedPointsPerHour = pointsPerDay / 24n;
-
-      // Verify the updated points per hour value
-      expect(await dragonForge.pointsPerHourPerToken()).to.equal(
-        expectedPointsPerHour
-      );
+        .to.emit(dragonForge, "PointsPerHourPerDayUpdated")
+        .withArgs(pointsPerHour);
 
       // Verify the stored points per day value
-      expect(await dragonForge.pointsPerDayPerToken()).to.equal(pointsPerDay);
+      expect(await dragonForge.pointsPerHourPerToken()).to.equal(pointsPerHour);
     });
 
     it("should revert if a non-owner tries to set points per day per token", async function () {
       const { user1, dragonForge } = await loadFixture(adminFixture);
 
       await expect(
-        dragonForge.connect(user1).setPointsPerDayPerToken(200)
+        dragonForge.connect(user1).setPointsPerHourPerToken(200)
       ).to.be.revertedWithCustomError(
         dragonForge,
         "OwnableUnauthorizedAccount"
@@ -245,17 +229,17 @@ describe("DragonForge Admin Tests", async function () {
     it("should allow the owner to initialize roll types", async function () {
       const { owner, dragonForge } = await loadFixture(adminFixture);
 
-      // Call initializeRollTypes as the owner
+      // Call initializeTierTypes as the owner
       await expect(
-        dragonForge.connect(owner).initializeRollTypes(rollTypes)
-      ).to.emit(dragonForge, "RollTypesInitialized");
+        dragonForge.connect(owner).initializeTierTypes(tierTypes)
+      ).to.emit(dragonForge, "TierTypesInitialized");
 
       // Verify roll types using the getRollTypeById function
-      const rollType0 = await dragonForge.getRollTypeById(0);
+      const rollType0 = await dragonForge.getTierTypeById(0);
       expect(rollType0.price).to.equal(1000n);
       expect(rollType0.probabilities).to.deep.equal([10000n, 0, 0, 0, 0, 0]);
 
-      const rollType1 = await dragonForge.getRollTypeById(1);
+      const rollType1 = await dragonForge.getTierTypeById(1);
       expect(rollType1.price).to.equal(2000n);
       expect(rollType1.probabilities).to.deep.equal([6000n, 4000, 0, 0, 0, 0]);
     });
@@ -268,17 +252,17 @@ describe("DragonForge Admin Tests", async function () {
       ];
 
       await expect(
-        dragonForge.connect(owner).initializeRollTypes(invalidRollTypes)
+        dragonForge.connect(owner).initializeTierTypes(invalidRollTypes)
       ).to.be.revertedWithCustomError(dragonForge, "InvalidProbabilitySum");
     });
 
     it("should revert if a non-owner tries to initialize roll types", async function () {
       const { user1, dragonForge } = await loadFixture(adminFixture);
 
-      const rollTypes = [{ price: 1000, probabilities: [100, 0, 0, 0, 0, 0] }];
+      const tierTypes = [{ price: 1000, probabilities: [100, 0, 0, 0, 0, 0] }];
 
       await expect(
-        dragonForge.connect(user1).initializeRollTypes(rollTypes)
+        dragonForge.connect(user1).initializeTierTypes(tierTypes)
       ).to.be.revertedWithCustomError(
         dragonForge,
         "OwnableUnauthorizedAccount"
@@ -307,14 +291,14 @@ describe("DragonForge Admin Tests", async function () {
 
       await expect(
         dragonForge.connect(owner).initializeRarityLevels(rarityLevels)
-      ).to.be.revertedWithCustomError(dragonForge, "RollsNotInitialized");
+      ).to.be.revertedWithCustomError(dragonForge, "TiersNotInitialized");
     });
 
     it("should revert if rarity levels length does not match existing rolls", async function () {
       const { owner, dragonForge } = await loadFixture(adminFixture);
 
       // Simulate initializing rolls
-      await dragonForge.connect(owner).initializeRollTypes(rollTypes);
+      await dragonForge.connect(owner).initializeTierTypes(tierTypes);
 
       const mockRarityLevels = [
         { minted: 0, maxSupply: 100n, tokenUri: "ar://common-folder/" }, // Provide fewer rarity levels than expected
@@ -329,11 +313,39 @@ describe("DragonForge Admin Tests", async function () {
       const { owner, dragonForge } = await loadFixture(adminFixture);
 
       // Simulate initializing rolls
-      await dragonForge.connect(owner).initializeRollTypes(rollTypes);
+      await dragonForge.connect(owner).initializeTierTypes(tierTypes);
+
+      const transformResultToExpectedFormat = (resultArray: any) => {
+        return resultArray.map((result: any) => ({
+          price: Number(result[0]), // `price` ist der erste Wert in `Result(2)`
+          probabilities: result[1].map(Number), // Die Wahrscheinlichkeiten sind in `Result(6)`
+        }));
+      };
+
+      const actualResult = await dragonForge.getAllTierTypes();
+      const transformedActualResult =
+        transformResultToExpectedFormat(actualResult);
+
+      // Vergleich der transformierten Ergebnisse
+      expect(transformedActualResult).to.deep.equal(tierTypes);
 
       await expect(
         dragonForge.connect(owner).initializeRarityLevels(rarityLevels)
       ).to.emit(dragonForge, "RarityLevelsInitialized");
+
+      const transformRarityLevels = (resultArray: any) => {
+        return resultArray.map((result: any) => ({
+          minted: Number(result[0]), // Der erste Wert in `Result(3)` entspricht `minted`
+          maxSupply: Number(result[1]), // Der zweite Wert entspricht `maxSupply`
+          tokenUri: result[2], // Der dritte Wert ist `tokenUri` (String, keine Umwandlung nötig)
+        }));
+      };
+
+      const actualRarityLevels = await dragonForge.getAllRarityLevels();
+      const transformedRarityLevels = transformRarityLevels(actualRarityLevels);
+
+      // Vergleich der transformierten Ergebnisse
+      expect(transformedRarityLevels).to.deep.equal(rarityLevels);
 
       // Verify initialization
       const rarityLevel0 = await dragonForge.rarityLevels(0);

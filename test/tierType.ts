@@ -5,7 +5,7 @@ interface RollType {
 }
 
 // Definition der Roll-Typen
-export const rollTypes: RollType[] = [
+export const tierTypes: RollType[] = [
   {
     price: 1000,
     probabilities: [10000, 0, 0, 0, 0, 0], // 100% Common
@@ -32,7 +32,7 @@ export const rollTypes: RollType[] = [
   },
 ];
 
-export const rollTypesTest: RollType[] = [
+export const tierTypesTest: RollType[] = [
   {
     price: 1000,
     probabilities: [8000, 1600, 200, 100, 100], // 80% Common

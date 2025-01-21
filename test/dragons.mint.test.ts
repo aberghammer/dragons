@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { MockEntropy, DragonForge } from "../typechain-types";
 import { rarityLevels, lowAmountRarityLevels } from "./rarityLevels";
-import { rollTypes } from "./rolltype";
+import { tierTypes } from "./tierType";
 
 describe("DragonForge Minting with Entropy", async function () {
   async function mintingFixture() {
@@ -61,7 +61,7 @@ describe("DragonForge Minting with Entropy", async function () {
     await dragonForge.setDinnerPartyDiscount(10);
     await dragonForge.setDinnerPartyDailyBonus(48);
 
-    await dragonForge.initializeRollTypes(rollTypes);
+    await dragonForge.initializeTierTypes(tierTypes);
     await dragonForge.initializeRarityLevels(rarityLevels);
 
     // Set the DragonForge contract as the caller for the entropy contract
@@ -179,7 +179,7 @@ describe("DragonForge Minting with Entropy", async function () {
       await ethers.provider.send("evm_mine", []);
 
       const rollType = 1; // Beispiel RollType
-      const rollPrice = rollTypes[rollType].price;
+      const rollPrice = tierTypes[rollType].price;
       const initialRewards = await dragonForge.pendingRewards(
         user1.getAddress()
       );
@@ -234,7 +234,7 @@ describe("DragonForge Minting with Entropy", async function () {
       );
 
       const rollType = 1; // Beispiel-RollType
-      const rollPrice = rollTypes[rollType].price;
+      const rollPrice = tierTypes[rollType].price;
       const discount = (rollPrice * 100) / 30; // dinnerPartyDiscount ist 24
 
       console.log("Roll price:", rollPrice);
@@ -342,7 +342,7 @@ describe("DragonForge Minting with Entropy", async function () {
         await user3.getAddress()
       );
       const rollType = 1; // Beispiel-RollType
-      const rollPrice = rollTypes[rollType].price;
+      const rollPrice = tierTypes[rollType].price;
       const discount = (rollPrice * 100) / 30; // dinnerPartyDiscount ist 24
 
       console.log("Roll price:", rollPrice);
@@ -464,7 +464,7 @@ describe("DragonForge Minting with Entropy", async function () {
         dragonForge
           .connect(user1)
           .requestToken(7, { value: ethers.parseEther("0.01") })
-      ).to.be.revertedWithCustomError(dragonForge, "InvalidRollType");
+      ).to.be.revertedWithCustomError(dragonForge, "InvalidTierType");
     });
 
     it("should revert if user has insufficient points", async function () {

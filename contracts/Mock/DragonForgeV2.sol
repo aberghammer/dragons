@@ -45,26 +45,27 @@ contract DragonForgeV2 is
     error MintAlreadyCompleted(uint64 sequenceNumber);
     error MintRequestAlreadyCancelled(uint64 sequenceNumber);
     error MintRequestNotYetExpired(uint64 requestId, uint256 timeLeft);
-    error InvalidRollType();
+    error InvalidTierType();
     error InputMismatch();
-    error TooManyRollTypes();
+    error TooManyTierTypes();
     error InvalidProbabilitySum();
     error ConfigMismatch();
-    error RollsNotInitialized();
+    error TiersNotInitialized();
     error NoMintsLeft();
     error CheckinToEarly();
     error MintingClosed();
+    error MinPerDayNotMatched();
 
     event StakingModeUpdated(bool open);
     event Staked(address indexed user, uint256 tokenId);
-    event PointsPerDayPerTokenUpdated(uint points);
+    event PointsPerHourPerDayUpdated(uint256 points);
     event Unstaked(address indexed user, uint256 tokenId);
     event TokenMinted(address indexed user, uint256 tokenId);
     event PointsRequiredUpdated(uint256 tokenType, uint256 points);
     event MintRequested(address indexed user, uint64 requestId);
     event MintFailed(address indexed user, uint64 requestId);
     event TokenReadyForMint(address indexed user, uint64 requestId);
-    event RollTypesInitialized();
+    event TierTypesInitialized();
     event RarityLevelsInitialized();
     event ProviderUpdated(address provider);
     event DailyCheckin(address indexed user, uint256 timestamp, uint256 bonus);
@@ -86,7 +87,7 @@ contract DragonForgeV2 is
         uint256 randomNumber;
         uint256 timestamp;
         string uri;
-        uint8 rollType;
+        uint8 tierType;
         bool requestCompleted;
         bool cancelled;
         bool mintFinalized;
@@ -98,24 +99,25 @@ contract DragonForgeV2 is
         string tokenUri;
     }
 
-    struct RollType {
+    struct TierType {
         uint256 price;
         uint256[] probabilities;
     }
 
     bool public stakingOpen;
     bool public mintingOpen;
-    bool public rolesInitialized;
+    bool public tiersInitialized;
     bool public rarityLevelsInitialized;
     bool internal stakingInProgress;
 
     uint public pointsPerHourPerToken;
-    uint public pointsPerDayPerToken;
+
     uint public mintedDragonCount;
     uint public mintRequestId;
     uint public checkinBonus;
     uint public dinnerPartyDiscount;
-    uint public existingRolls;
+    uint public existingTiers;
+    uint public existingRarityLevels;
     uint public dinnerPartyDailyBonus;
 
     address[] public allStakers;
@@ -137,7 +139,7 @@ contract DragonForgeV2 is
     mapping(uint64 => MintRequest) public mintRequests;
     mapping(address => uint256[]) public mintRequestsByUser;
 
-    mapping(uint8 => RollType) public rollTypes;
+    mapping(uint8 => TierType) public tierTypes;
     mapping(uint8 => RarityLevel) public rarityLevels;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -164,7 +166,6 @@ contract DragonForgeV2 is
         provider = provider_;
 
         pointsPerHourPerToken = pointsPerHourPerToken_;
-        pointsPerDayPerToken = pointsPerHourPerToken_ * 24;
 
         stakedTokenIds[address(0)].push();
     }
@@ -176,8 +177,8 @@ contract DragonForgeV2 is
     function initializeRarityLevels(
         RarityLevel[] memory _rarityLevels
     ) external onlyOwner {
-        if (!rolesInitialized) revert RollsNotInitialized();
-        if (_rarityLevels.length != rollTypes[0].probabilities.length)
+        if (!tiersInitialized) revert TiersNotInitialized();
+        if (_rarityLevels.length != tierTypes[0].probabilities.length)
             revert ConfigMismatch();
         for (uint8 i = 0; i < _rarityLevels.length; i++) {
             rarityLevels[i] = RarityLevel({
@@ -186,33 +187,34 @@ contract DragonForgeV2 is
                 tokenUri: _rarityLevels[i].tokenUri
             });
         }
+        existingRarityLevels = _rarityLevels.length;
         rarityLevelsInitialized = true;
         emit RarityLevelsInitialized();
     }
 
     /**
-     * @dev Initializes the roll types for the contract.
-     * @param newRollTypes The roll types to be initialized.
+     * @dev Initializes the tier types for the contract.
+     * @param newTierTypes The tier types to be initialized.
      */
-    function initializeRollTypes(
-        RollType[] memory newRollTypes
+    function initializeTierTypes(
+        TierType[] memory newTierTypes
     ) external onlyOwner {
-        for (uint8 i = 0; i < newRollTypes.length; i++) {
+        for (uint8 i = 0; i < newTierTypes.length; i++) {
             uint256 totalProbability = 0;
 
-            for (uint8 j = 0; j < newRollTypes[i].probabilities.length; j++) {
-                totalProbability += newRollTypes[i].probabilities[j];
+            for (uint8 j = 0; j < newTierTypes[i].probabilities.length; j++) {
+                totalProbability += newTierTypes[i].probabilities[j];
             }
 
-            if (totalProbability != 100) {
+            if (totalProbability != 10000) {
                 revert InvalidProbabilitySum();
             }
 
-            rollTypes[i] = newRollTypes[i];
+            tierTypes[i] = newTierTypes[i];
         }
-        rolesInitialized = true;
-        existingRolls = newRollTypes.length;
-        emit RollTypesInitialized();
+        tiersInitialized = true;
+        existingTiers = newTierTypes.length;
+        emit TierTypesInitialized();
     }
 
     /**
@@ -244,12 +246,13 @@ contract DragonForgeV2 is
 
     /**
      * @dev Allows the owner to update the points per day.
-     * @param pointsPerDay The new points required.
+     * @param pointsPerHour The new points required.
      */
-    function setPointsPerDayPerToken(uint256 pointsPerDay) external onlyOwner {
-        pointsPerHourPerToken = pointsPerDay / 24;
-        pointsPerDayPerToken = pointsPerDay;
-        emit PointsPerDayPerTokenUpdated(pointsPerDay);
+    function setPointsPerHourPerToken(
+        uint256 pointsPerHour
+    ) external onlyOwner {
+        pointsPerHourPerToken = pointsPerHour;
+        emit PointsPerHourPerDayUpdated(pointsPerHour);
     }
 
     /**
@@ -324,14 +327,32 @@ contract DragonForgeV2 is
     }
 
     /**
-     * @dev helper functon for getting the rollType configuration
-     * @param rollTypeId The ID of the roll type to be retrieved.
+     * @dev helper functon for getting the tierType configuration
+     * @param tierTypeId The ID of the tier type to be retrieved.
      */
-    function getRollTypeById(
-        uint8 rollTypeId
-    ) external view returns (RollType memory) {
-        RollType storage rollType = rollTypes[rollTypeId];
-        return (rollType);
+    function getTierTypeById(
+        uint8 tierTypeId
+    ) external view returns (TierType memory) {
+        TierType storage tierType = tierTypes[tierTypeId];
+        return (tierType);
+    }
+
+    function getAllTierTypes() external view returns (TierType[] memory) {
+        TierType[] memory allTierTypes = new TierType[](existingTiers);
+        for (uint8 i = 0; i < existingTiers; i++) {
+            allTierTypes[i] = tierTypes[i];
+        }
+        return allTierTypes;
+    }
+
+    function getAllRarityLevels() external view returns (RarityLevel[] memory) {
+        RarityLevel[] memory allRarityLevels = new RarityLevel[](
+            existingRarityLevels
+        );
+        for (uint8 i = 0; i < existingRarityLevels; i++) {
+            allRarityLevels[i] = rarityLevels[i];
+        }
+        return allRarityLevels;
     }
 
     //--------------------------------------------------------------------------------
@@ -527,17 +548,17 @@ contract DragonForgeV2 is
     /**
      * @dev Allows a user to request a token mint.
      * The user must have enough points to request the token.
-     * @param rollType The type of roll to be requested.
+     * @param tierType The type of tier to be requested.
      */
-    function requestToken(uint8 rollType) external payable nonReentrant {
-        if (rollType >= existingRolls) revert InvalidRollType();
+    function requestToken(uint8 tierType) external payable nonReentrant {
+        if (tierType >= existingTiers) revert InvalidTierType();
         if (!mintingOpen) revert MintingClosed();
 
-        RollType storage selectedRollType = rollTypes[rollType];
+        TierType storage selectedTierType = tierTypes[tierType];
         bool hasMintCapacity = false;
 
-        for (uint8 i = 0; i < selectedRollType.probabilities.length; i++) {
-            if (selectedRollType.probabilities[i] == 0) {
+        for (uint8 i = 0; i < selectedTierType.probabilities.length; i++) {
+            if (selectedTierType.probabilities[i] == 0) {
                 continue;
             }
 
@@ -559,7 +580,7 @@ contract DragonForgeV2 is
                 dinnerPartyDiscount;
         }
 
-        uint256 pointsRequired = rollTypes[rollType].price;
+        uint256 pointsRequired = tierTypes[tierType].price;
 
         if (discountPercentage > 50) {
             discountPercentage = 50; // max 50% discount
@@ -600,7 +621,7 @@ contract DragonForgeV2 is
             randomNumber: 0,
             timestamp: block.timestamp,
             uri: "",
-            rollType: rollType,
+            tierType: tierType,
             requestCompleted: false,
             cancelled: false,
             mintFinalized: false
@@ -682,14 +703,14 @@ contract DragonForgeV2 is
         }
 
         //1) First we check which rarities are still available
-        // Example: {Bin2 -> 18%, Bin3 -> 20%} => sum = 38.
-        uint8[] memory availableRarities = new uint8[](existingRolls);
+        // Example: {common -> 18%, uncommon -> 20%} => sum = 38.
+        uint8[] memory availableRarities = new uint8[](existingRarityLevels);
         uint256 availableCount = 0;
-        for (uint8 i = 0; i < existingRolls; i++) {
+        for (uint8 i = 0; i < existingRarityLevels; i++) {
             if (
-                // bins with 0% probability are not available
+                // rarities with 0% probability are not available
                 rarityLevels[i].minted < rarityLevels[i].maxSupply &&
-                rollTypes[request.rollType].probabilities[i] > 0
+                tierTypes[request.tierType].probabilities[i] > 0
             ) {
                 availableRarities[availableCount] = i;
                 availableCount++;
@@ -698,7 +719,7 @@ contract DragonForgeV2 is
 
         //if a request wasn't resolved quick enough, and another user minted out, we refund the user
         if (availableCount == 0) {
-            // If no tokens left -> Fail + Refund
+            // If no tokens of rarity left -> Fail + Refund
             owedRewards[request.user] += request.payedPrice;
             request.cancelled = true;
             emit MintFailed(request.user, sequenceNumber);
@@ -706,15 +727,15 @@ contract DragonForgeV2 is
         }
 
         // 2) Calculate the total probability space
-        // Example: {Bin2 -> 18%, Bin3 -> 20%} => totalAvalableProbability = 38.
-        // Example: User rolls a 25 => effectiveRandomValue = 25.
+        // Example: {common -> 18%, uncomon -> 20%} => totalAvalableProbability = 38.
+        // Example: User tiers a 25 => effectiveRandomValue = 25.
         // We need to find the rarity bin that corresponds to the effective random value
-        // Bin2 -> 18% so 25 fits not in Bin2
-        // Bin3 -> 20%: 20% + 18% = 38% => 25 < 38. So we select Bin3
+        // common -> 18% so 25 fits not in Bin2
+        // uncommon + common --> 20% + 18% = 38% => 25% < 38%. So we select uncommon
         uint256 totalAvailableProbability = 0;
         for (uint8 k = 0; k < availableCount; k++) {
             uint8 rarId = availableRarities[k];
-            totalAvailableProbability += rollTypes[request.rollType]
+            totalAvailableProbability += tierTypes[request.tierType]
                 .probabilities[rarId];
         }
         // Security check: totalAvailableProbability must not be 0
@@ -727,7 +748,7 @@ contract DragonForgeV2 is
             return;
         }
 
-        // We set up a logic to reroll if the selected rarity is full
+        // We set up a logic to retier if the selected rarity is minted out
         uint8 finalRarityIndex = 0;
         uint256 usedRandomness = 0;
         bool minted = false;
@@ -737,7 +758,7 @@ contract DragonForgeV2 is
             // 3) calculate the effective random value on the *entire* probability space
             // instead of random % 100 => random % totalAvailableProbability
             // So a number between 0 and totalAvailableProbability - 1
-            // Example: {Bin2 -> 18%, Bin3 -> 20%} => totalAvalableProbability = 38.
+            // Example: {common -> 18%, uncommon -> 20%} => totalAvalableProbability = 38%.
             // => effectiveRandomValue = random % 38 = {0,...,37}
             uint256 effectiveRandomValue = (attempt == 0)
                 ? (request.randomNumber % totalAvailableProbability)
@@ -749,7 +770,7 @@ contract DragonForgeV2 is
             uint256 cumulativeProbability = 0;
             for (uint8 j = 0; j < availableCount; j++) {
                 uint8 rarityIdx = availableRarities[j];
-                cumulativeProbability += rollTypes[request.rollType]
+                cumulativeProbability += tierTypes[request.tierType]
                     .probabilities[rarityIdx];
 
                 if (effectiveRandomValue < cumulativeProbability) {

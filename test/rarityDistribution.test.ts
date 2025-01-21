@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { MockEntropy, DragonForge } from "../typechain-types";
 import { lowAmountRarityLevelsTest } from "./rarityLevels";
-import { rollTypesTest } from "./rolltype";
+import { tierTypesTest } from "./tierType";
 
 describe("DragonForge Minting with Entropy", async function () {
   async function mintingFixture() {
@@ -61,7 +61,7 @@ describe("DragonForge Minting with Entropy", async function () {
     await dragonForge.setDinnerPartyDiscount(10);
     await dragonForge.setDinnerPartyDailyBonus(48);
 
-    await dragonForge.initializeRollTypes(rollTypesTest);
+    await dragonForge.initializeTierTypes(tierTypesTest);
     await dragonForge.initializeRarityLevels(lowAmountRarityLevelsTest);
 
     // Set the DragonForge contract as the caller for the entropy contract
@@ -290,7 +290,7 @@ describe("DragonForge Minting with Entropy", async function () {
         },
       ];
 
-      await dragonForge.initializeRollTypes(rollTypes);
+      await dragonForge.initializeTierTypes(rollTypes);
       await dragonForge.initializeRarityLevels(rarityLevels);
 
       // Enable staking mode and stake tokens
@@ -359,7 +359,7 @@ describe("DragonForge Minting with Entropy", async function () {
         user1.getAddress()
       );
 
-      await dragonForge.initializeRollTypes(rollTypes);
+      await dragonForge.initializeTierTypes(rollTypes);
       await dragonForge.initializeRarityLevels(rarityLevels);
 
       // Enable staking mode and stake tokens
