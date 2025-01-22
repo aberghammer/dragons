@@ -42,4 +42,4 @@ main().catch((error) => {
 // 2. Verify
 // 3. Set Dragons Lair Contract
 
-// npx hardhat verify 0x5FbDB2315678afecb367f032d93F642f64180aa3 0xE09eA9cBc76b0105dd32312D4a2E37B4d4c7a43c 500 "DWAGINZ" "D" --network ApeChain
+// npx hardhat verify 0x20c6d96CeA6e34F7eb8e441AEf1871551CB1b897 0xA09751B61db352d892c4dD204053E9D6e5924E1b 500 "DWAGINZ" "D" --network ApeChain

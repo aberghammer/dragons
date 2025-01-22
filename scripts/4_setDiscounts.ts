@@ -7,7 +7,7 @@ dotEnvConfig();
 async function main() {
   // Contract deployment address (replace with your deployed contract's address)
 
-  const dragonForge = "0x4287375770188C41746CA258982137a8f0EEA540"; // Example address / Derpy Dragons Address
+  const dragonForge = "0x8F6708d8d476917D8A7E91f8087dE44dE562Cb90"; // Example address / Derpy Dragons Address
 
   // Get the contract factory and attach to the deployed address
   const DragonForge = await ethers.getContractFactory("DragonForge");
@@ -32,7 +32,7 @@ async function main() {
   console.log(`Set dinner party discount.`);
 
   const tx_set_dinner_party_daily_bonus =
-    await dragonForgeContract.setDinnerPartyDailyBonus(48);
+    await dragonForgeContract.setDinnerPartyDailyBonus(24);
 
   await tx_set_dinner_party_daily_bonus.wait();
 

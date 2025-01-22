@@ -290,6 +290,132 @@ describe("DragonForge Tests", async function () {
       expect(owedRewards).to.be.greaterThan(0);
     });
 
+    it("should calculate rewards correctly with pointsPerHourPerToken set to 1000", async function () {
+      const { user1, dragonForge, dragons } = await loadFixture(cbcFixture);
+
+      // Set pointsPerHourPerToken to 1000
+      await dragonForge.setPointsPerHourPerToken(1000);
+
+      // Open staking mode
+      await dragonForge.setStakingMode(true);
+
+      // Approve and stake tokens
+      const tokenIds = [1];
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await dragonForge.getAddress(), true);
+      await dragonForge.connect(user1).stake(tokenIds);
+
+      // Advance time by 10 hours
+      await ethers.provider.send("evm_increaseTime", [10 * 60 * 60]); // 10 hours
+      await ethers.provider.send("evm_mine", []);
+
+      // Calculate pending rewards
+      const pendingRewards = await dragonForge.pendingRewards(
+        await user1.getAddress()
+      );
+
+      // Expected rewards: 10 hours * 100000 points/hour
+      const expectedRewards = 10 * 1000;
+
+      console.log("Pending Rewards:", pendingRewards.toString());
+      console.log("Expected Rewards:", expectedRewards.toString());
+
+      // Check if pending rewards match expected rewards
+      expect(pendingRewards).to.equal(expectedRewards);
+    });
+
+    it("should continue using the old pointsPerHourPerToken for already staked tokens until unstaked", async function () {
+      const { user1, dragonForge, dragons } = await loadFixture(cbcFixture);
+
+      // Set initial pointsPerHourPerToken to 10000
+      await dragonForge.setPointsPerHourPerToken(1);
+
+      // Open staking mode
+      await dragonForge.setStakingMode(true);
+
+      // Approve and stake tokens
+      const tokenIds = [1];
+      await dragons
+        .connect(user1)
+        .setApprovalForAll(await dragonForge.getAddress(), true);
+      await dragonForge.connect(user1).stake(tokenIds);
+
+      // Advance time by 5 hours
+      await ethers.provider.send("evm_increaseTime", [5 * 60 * 60]); // 5 hours
+      await ethers.provider.send("evm_mine", []);
+
+      await dragonForge.connect(user1).unstake(tokenIds);
+
+      const fistPendingRewards = await dragonForge.pendingRewards(
+        await user1.getAddress()
+      );
+      expect(fistPendingRewards).to.equal(5 * 1);
+      console.log("First Pending Rewards:", fistPendingRewards.toString());
+      console.log("Expected Rewards:", 5 * 1);
+      await dragonForge.setPointsPerHourPerToken(1000);
+      console.log(
+        "currentRewards unstaked after point increase:",
+        await dragonForge.pendingRewards(await user1.getAddress()) // Ausgabe: 5
+      );
+
+      expect(
+        await dragonForge.pendingRewards(await user1.getAddress())
+      ).to.equal(5);
+
+      await dragonForge.connect(user1).stake(tokenIds);
+
+      // Advance time by another 5 hours
+      await ethers.provider.send("evm_increaseTime", [5 * 60 * 60]); // 5 hours
+      await ethers.provider.send("evm_mine", []);
+
+      // Calculate pending rewards
+      const pendingRewards = await dragonForge.pendingRewards(
+        await user1.getAddress()
+      );
+
+      // Expected rewards:
+      // First 5 hours: 5 * 10000
+      const secondPendingRewards = 5 * 1 + 5 * 1000;
+
+      console.log("Second Pending Rewards:", pendingRewards.toString()); // Ausgabe: 50005 (5 von davor und 5000 von den 5 Stunden nach dem restaken)
+      console.log("Second Expected Rewards:", secondPendingRewards.toString()); // Ausgabe: 50005
+
+      // Verify pending rewards match expected rewards
+      expect(pendingRewards).to.equal(secondPendingRewards);
+
+      // Unstake tokens
+      await dragonForge.connect(user1).unstake(tokenIds);
+
+      // Stake again with new pointsPerHourPerToken
+      await dragonForge.connect(user1).stake(tokenIds);
+
+      console.log("Pending Rewards:", pendingRewards.toString());
+      console.log("Expected Rewards:", secondPendingRewards.toString());
+
+      // Advance time by another 5 hours
+      await ethers.provider.send("evm_increaseTime", [5 * 60 * 60]); // 5 hours
+      await ethers.provider.send("evm_mine", []);
+
+      await dragonForge.connect(user1).unstake(tokenIds);
+
+      // Calculate pending rewards after unstake and restake
+      const newPendingRewards = await dragonForge.pendingRewards(
+        await user1.getAddress()
+      );
+
+      // Expected rewards:
+      // First 10 hours: 10 * 1000 (old calculation before unstake)
+      // Next 5 hours: 5 * 1000 (new calculation after restake)
+      const thirdExpectedRewards = 5 * 1 + 10 * 1000;
+
+      console.log("New Pending Rewards:", newPendingRewards.toString()); // Ausgabe: 1000
+      console.log("New Expected Rewards:", thirdExpectedRewards.toString()); // Ausgabe: 1000
+
+      // Verify new pending rewards match new expected rewards
+      expect(newPendingRewards).to.equal(thirdExpectedRewards);
+    });
+
     it("should revert if no tokens are specified for unstaking", async function () {
       const { user1, dragonForge } = await loadFixture(cbcFixture);
 

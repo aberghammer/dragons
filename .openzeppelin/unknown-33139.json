@@ -60,6 +60,16 @@
       "address": "0xEF62677e721003B849D8484a6301789B83f23df5",
       "txHash": "0x9226ee50a22ce6a090435690f8248f8dfa00fa4966bd4021ff0893c5dc6187a7",
       "kind": "uups"
+    },
+    {
+      "address": "0x532B05f49460DC103F5fE8f522acEdC17DDe4991",
+      "txHash": "0x7a5a699448ef5aaa74bcc53e93bcb4389cc8705ef12c22cd28fa165b2351220f",
+      "kind": "uups"
+    },
+    {
+      "address": "0x8F6708d8d476917D8A7E91f8087dE44dE562Cb90",
+      "txHash": "0x906adbe88b847c457b9ee6037e5de24b0ca9933417e5930c227eef72d1a9d21b",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -5903,6 +5913,545 @@
               {
                 "label": "checkInTimestamp",
                 "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "49dcbf7f7fed71607f3f3f272f2c0a3c0e8498da2973d1baa9e69b815ee21a46": {
+      "address": "0x7D90ADd805a734aa3f05dd5a8c360c3bE6233Ff4",
+      "txHash": "0x36faca1ec945e3cc6c2ff138d36ab557de2403045987e96940a2d93bd2916498",
+      "layout": {
+        "solcVersion": "0.8.28",
+        "storage": [
+          {
+            "label": "stakingOpen",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:107"
+          },
+          {
+            "label": "mintingOpen",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:108"
+          },
+          {
+            "label": "tiersInitialized",
+            "offset": 2,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:109"
+          },
+          {
+            "label": "rarityLevelsInitialized",
+            "offset": 3,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:110"
+          },
+          {
+            "label": "stakingInProgress",
+            "offset": 4,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:111"
+          },
+          {
+            "label": "pointsPerHourPerToken",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:113"
+          },
+          {
+            "label": "mintedDragonCount",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:115"
+          },
+          {
+            "label": "mintRequestId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:116"
+          },
+          {
+            "label": "checkinBonus",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:117"
+          },
+          {
+            "label": "dinnerPartyDiscount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:118"
+          },
+          {
+            "label": "existingTiers",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:119"
+          },
+          {
+            "label": "existingRarityLevels",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:120"
+          },
+          {
+            "label": "dinnerPartyDailyBonus",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:121"
+          },
+          {
+            "label": "allStakers",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:123"
+          },
+          {
+            "label": "provider",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_address",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:124"
+          },
+          {
+            "label": "dragons",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_contract(IERC721)4146",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:126"
+          },
+          {
+            "label": "dinnerParty",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_contract(IERC721)4146",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:127"
+          },
+          {
+            "label": "dwaginz",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_contract(IDwaginz)9400",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:128"
+          },
+          {
+            "label": "entropy",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(IEntropy)9321",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:129"
+          },
+          {
+            "label": "lastCheckinTimestamp",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:131"
+          },
+          {
+            "label": "stakedTokenIds",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:132"
+          },
+          {
+            "label": "stakedTokenProps",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_mapping(t_uint256,t_struct(StakedTokens)9587_storage)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:133"
+          },
+          {
+            "label": "hasStaked",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:135"
+          },
+          {
+            "label": "tokenIndexInArray",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:136"
+          },
+          {
+            "label": "owedRewards",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:137"
+          },
+          {
+            "label": "requestIdToMintId",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_uint64,t_uint256)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:138"
+          },
+          {
+            "label": "mintRequests",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_uint64,t_struct(MintRequest)9608_storage)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:139"
+          },
+          {
+            "label": "mintRequestsByUser",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:140"
+          },
+          {
+            "label": "tierTypes",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_uint8,t_struct(TierType)9621_storage)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:142"
+          },
+          {
+            "label": "rarityLevels",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_uint8,t_struct(RarityLevel)9615_storage)",
+            "contract": "DragonForge",
+            "src": "contracts\\DragonForge.sol:143"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)73_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)13_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)723_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IDwaginz)9400": {
+            "label": "contract IDwaginz",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC721)4146": {
+            "label": "contract IERC721",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IEntropy)9321": {
+            "label": "contract IEntropy",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(StakedTokens)9587_storage)": {
+            "label": "mapping(uint256 => struct DragonForge.StakedTokens)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint64,t_struct(MintRequest)9608_storage)": {
+            "label": "mapping(uint64 => struct DragonForge.MintRequest)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint64,t_uint256)": {
+            "label": "mapping(uint64 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint8,t_struct(RarityLevel)9615_storage)": {
+            "label": "mapping(uint8 => struct DragonForge.RarityLevel)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint8,t_struct(TierType)9621_storage)": {
+            "label": "mapping(uint8 => struct DragonForge.TierType)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(MintRequest)9608_storage": {
+            "label": "struct DragonForge.MintRequest",
+            "members": [
+              {
+                "label": "user",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "payedPrice",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "tokenId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "randomNumber",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "uri",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "tierType",
+                "type": "t_uint8",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "requestCompleted",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "6"
+              },
+              {
+                "label": "cancelled",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "6"
+              },
+              {
+                "label": "mintFinalized",
+                "type": "t_bool",
+                "offset": 3,
+                "slot": "6"
+              }
+            ],
+            "numberOfBytes": "224"
+          },
+          "t_struct(RarityLevel)9615_storage": {
+            "label": "struct DragonForge.RarityLevel",
+            "members": [
+              {
+                "label": "minted",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "tokenUri",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(StakedTokens)9587_storage": {
+            "label": "struct DragonForge.StakedTokens",
+            "members": [
+              {
+                "label": "owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "checkInTimestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(TierType)9621_storage": {
+            "label": "struct DragonForge.TierType",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "probabilities",
+                "type": "t_array(t_uint256)dyn_storage",
                 "offset": 0,
                 "slot": "1"
               }
