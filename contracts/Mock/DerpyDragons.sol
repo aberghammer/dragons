@@ -9,11 +9,11 @@ contract DerpyDragons is ERC721, Ownable {
     constructor() ERC721("DerpyDragons", "DD") Ownable(msg.sender) {}
 
     modifier onlyDragonLair() {
-        if (msg.sender != dragonLairAddress) revert InvalidCaller();
+        if (msg.sender != dragonForgeAddress) revert InvalidCaller();
         _;
     }
 
-    address public dragonLairAddress;
+    address public dragonForgeAddress;
     uint public tokenCount;
     mapping(uint256 => string) public tokenURIs;
 
@@ -25,11 +25,11 @@ contract DerpyDragons is ERC721, Ownable {
         _mint(to, tokenCount);
     }
 
-    function setDragonLairAddress(
-        address dragonLairAddress_
+    function setDragonForgeAddress(
+        address dragonForgeAddress_
     ) external onlyOwner {
-        require(dragonLairAddress_ != address(0), "Invalid address");
-        dragonLairAddress = dragonLairAddress_;
+        require(dragonForgeAddress_ != address(0), "Invalid address");
+        dragonForgeAddress = dragonForgeAddress_;
     }
 
     function tokenURI(

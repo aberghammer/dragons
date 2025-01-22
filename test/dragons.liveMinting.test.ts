@@ -56,7 +56,7 @@ describe("DragonForge Minting with Entropy", async function () {
 
     const dragonForge = dragonForgeUntyped as unknown as DragonForge;
 
-    await derpyDragons.setDragonLairAddress(await dragonForge.getAddress());
+    await derpyDragons.setDragonForgeAddress(await dragonForge.getAddress());
 
     await dragonForge.setDinnerPartyDiscount(0);
     await dragonForge.setDinnerPartyDailyBonus(0);

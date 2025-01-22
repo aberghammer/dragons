@@ -7,7 +7,7 @@ dotEnvConfig();
 async function main() {
   // Contract deployment address (replace with your deployed contract's address)
 
-  const dragonForge = "0x4287375770188C41746CA258982137a8f0EEA540"; // Example address / Derpy Dragons Address
+  const dragonForge = "0x44eBE8fa260461d7F3cACf5Cf6c1dFa022fD0dc6"; // Example address / Derpy Dragons Address
 
   // Get the contract factory and attach to the deployed address
   const DragonForge = await ethers.getContractFactory("DragonForge");

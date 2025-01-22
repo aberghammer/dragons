@@ -15,8 +15,8 @@ async function main() {
   // Deploy the Dwaginz contract
   const Dwaginz = await ethers.getContractFactory("Dwaginz");
   const dwaginz = await Dwaginz.deploy(
-    deployerAddress, // Royalty Receiver
-    500, // Royalty fee numerator (5%)
+    "0xBacFd63b5B6a879aca84dAb951b42B405a457127", // Royalty Receiver
+    690, // Royalty fee numerator (5%)
     "DWAGINZ", // Token name
     "D" // Token symbol
   );
@@ -43,3 +43,5 @@ main().catch((error) => {
 // 3. Set Dragons Lair Contract
 
 // npx hardhat verify 0x20c6d96CeA6e34F7eb8e441AEf1871551CB1b897 0xA09751B61db352d892c4dD204053E9D6e5924E1b 500 "DWAGINZ" "D" --network ApeChain
+
+// npx hardhat verify 0xd0dd08482e2Dc03670968F0e2e49581235F0CEda 0xBacFd63b5B6a879aca84dAb951b42B405a457127 690 "DWAGINZ" "D" --network ApeChain

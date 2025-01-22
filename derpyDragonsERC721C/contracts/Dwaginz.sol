@@ -9,11 +9,11 @@ import "@limitbreak/creator-token-contracts/contracts/access/OwnableBasic.sol";
  * @title Dwaginz
  * @author
  * @notice This contract extends ERC721C to include basic royalty functionality using BasicRoyalties.
- *         It relies on an external "DragonLair" contract to manage minting of tokens.
+ *         It relies on an external "DragonForge" contract to manage minting of tokens.
  */
 contract Dwaginz is OwnableBasic, ERC721C, BasicRoyalties {
-    /// @notice Address of the dragon lair contract that controls minting.
-    address public dragonLairAddress;
+    /// @notice Address of the dragon forge contract that controls minting.
+    address public dragonForgeAddress;
 
     /// @notice Counter for the total number of tokens minted.
     uint public tokenCount;
@@ -24,9 +24,9 @@ contract Dwaginz is OwnableBasic, ERC721C, BasicRoyalties {
     /// @dev Thrown when a function is called by an unauthorized sender.
     error InvalidCaller();
 
-    /// @dev Ensures that the caller is the authorized dragon lair contract.
-    modifier onlyDragonLair() {
-        if (msg.sender != dragonLairAddress) revert InvalidCaller();
+    /// @dev Ensures that the caller is the authorized dragon forge contract.
+    modifier onlyDragonForge() {
+        if (msg.sender != dragonForgeAddress) revert InvalidCaller();
         _;
     }
 
@@ -48,15 +48,15 @@ contract Dwaginz is OwnableBasic, ERC721C, BasicRoyalties {
     {}
 
     /**
-     * @notice Sets the address of the dragon lair contract.
+     * @notice Sets the address of the dragon forge contract.
      * @dev Can only be called by the contract owner.
-     * @param dragonLairAddress_ The address of the dragon lair contract.
+     * @param dragonForgeAddress_ The address of the dragon forge contract.
      */
-    function setDragonLairAddress(
-        address dragonLairAddress_
+    function setDragonForgeAddress(
+        address dragonForgeAddress_
     ) external onlyOwner {
-        require(dragonLairAddress_ != address(0), "Invalid address");
-        dragonLairAddress = dragonLairAddress_;
+        require(dragonForgeAddress_ != address(0), "Invalid address");
+        dragonForgeAddress = dragonForgeAddress_;
     }
 
     /**
@@ -100,11 +100,11 @@ contract Dwaginz is OwnableBasic, ERC721C, BasicRoyalties {
 
     /**
      * @notice Mints a new token to the specified address with the given token URI.
-     * @dev Can only be called by the dragon lair contract. Increments the token count and assigns the URI.
+     * @dev Can only be called by the dragon forge contract. Increments the token count and assigns the URI.
      * @param to The address that will receive the minted token.
      * @param tokenUri The metadata URI for the minted token.
      */
-    function mint(address to, string memory tokenUri) external onlyDragonLair {
+    function mint(address to, string memory tokenUri) external onlyDragonForge {
         tokenCount++;
         tokenURIs[tokenCount] = tokenUri;
         _mint(to, tokenCount);

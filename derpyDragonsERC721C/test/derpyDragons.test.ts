@@ -55,7 +55,7 @@ describe("ERC721CWithBasicRoyalties", function () {
 
   describe("Minting", function () {
     it("should allow dragon lair to mint tokens", async function () {
-      await contract.setDragonLairAddress(await dragonLair.getAddress());
+      await contract.setDragonForgeAddress(await dragonLair.getAddress());
       await contract
         .connect(dragonLair)
         .mint(await owner.getAddress(), "ipfs://token-uri-1");
@@ -75,15 +75,15 @@ describe("ERC721CWithBasicRoyalties", function () {
 
   describe("Access Control", function () {
     it("should only allow owner to set dragon lair address", async function () {
-      await contract.setDragonLairAddress(await dragonLair.getAddress());
-      expect(await contract.dragonLairAddress()).to.equal(
+      await contract.setDragonForgeAddress(await dragonLair.getAddress());
+      expect(await contract.dragonForgeAddress()).to.equal(
         await dragonLair.getAddress()
       );
 
       await expect(
         contract
           .connect(otherAccount)
-          .setDragonLairAddress(await otherAccount.getAddress())
+          .setDragonForgeAddress(await otherAccount.getAddress())
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
@@ -127,17 +127,17 @@ describe("ERC721CWithBasicRoyalties", function () {
     });
   });
 
-  describe("setDragonLairAddress", function () {
+  describe("setDragonForgeAddress", function () {
     it("should allow the owner to set a valid dragon lair address", async function () {
-      await contract.setDragonLairAddress(await dragonLair.getAddress());
-      expect(await contract.dragonLairAddress()).to.equal(
+      await contract.setDragonForgeAddress(await dragonLair.getAddress());
+      expect(await contract.dragonForgeAddress()).to.equal(
         await dragonLair.getAddress()
       );
     });
 
     it("should revert if the address is zero", async function () {
       await expect(
-        contract.setDragonLairAddress(ethers.ZeroAddress)
+        contract.setDragonForgeAddress(ethers.ZeroAddress)
       ).to.be.revertedWith("Invalid address");
     });
 
@@ -145,7 +145,7 @@ describe("ERC721CWithBasicRoyalties", function () {
       await expect(
         contract
           .connect(otherAccount)
-          .setDragonLairAddress(await otherAccount.getAddress())
+          .setDragonForgeAddress(await otherAccount.getAddress())
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -185,7 +185,7 @@ describe("ERC721CWithBasicRoyalties", function () {
   describe("setTokenURI", function () {
     it("should allow the owner to update a token's URI", async function () {
       // Set dragon lair and mint a token
-      await contract.setDragonLairAddress(await dragonLair.getAddress());
+      await contract.setDragonForgeAddress(await dragonLair.getAddress());
       await contract
         .connect(dragonLair)
         .mint(await owner.getAddress(), "ipfs://initial-uri");
@@ -200,7 +200,7 @@ describe("ERC721CWithBasicRoyalties", function () {
 
     it("should revert if a non-owner tries to update a token's URI", async function () {
       // Set dragon lair and mint a token
-      await contract.setDragonLairAddress(await dragonLair.getAddress());
+      await contract.setDragonForgeAddress(await dragonLair.getAddress());
       await contract
         .connect(dragonLair)
         .mint(await owner.getAddress(), "ipfs://initial-uri");
